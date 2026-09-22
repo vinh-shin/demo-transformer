@@ -1,0 +1,13 @@
+torch>=2.2
+transformers>=4.40
+datasets>=2.19
+accelerate>=0.30
+scikit-learn>=1.4
+pandas>=2.2
+numpy>=1.26
+matplotlib>=3.8
+seaborn>=0.13
+underthesea>=6.8
+tqdm>=4.66
+nbformat>=5.10
+ipykernel>=6.29
