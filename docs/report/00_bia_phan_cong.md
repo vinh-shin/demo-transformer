@@ -19,6 +19,7 @@ KHOA **CÔNG NGHỆ THÔNG TIN**
 > **Học viên thực hiện:**
 > 2611318 - **Vòng Vĩnh Shìn**
 > 2611302 - **Trần Nhật Duật**
+> [MSHV] - **Hồ Đức Thắng**
 
 <div align="center">
 
@@ -34,6 +35,7 @@ KHOA **CÔNG NGHỆ THÔNG TIN**
 |---|---|---|---|---|
 | 1 | 2611318 | Vòng Vĩnh Shìn | 100% | |
 | 2 | 2611302 | Trần Nhật Duật | 100% | |
+| 3 | [MSHV] | Hồ Đức Thắng | 100% | |
 
 ## BẢNG PHÂN CÔNG NHIỆM VỤ
 
@@ -44,7 +46,9 @@ KHOA **CÔNG NGHỆ THÔNG TIN**
 | 1 | Trần Nhật Duật | Tìm hiểu bài toán phát hiện bình luận độc hại, các hướng tiếp cận (luật, học máy truyền thống, RNN/CNN), khảo sát dataset ViHSD; biên soạn phần lý thuyết liên quan. | Hoàn thành |
 | 2 | Vòng Vĩnh Shìn | Cài đặt khối tiền xử lý dữ liệu (làm sạch, tách từ), xây dựng vocab, mã hoá câu, `Dataset`/`DataLoader`; tham gia thực nghiệm. | Hoàn thành |
 | 3 | Vòng Vĩnh Shìn | Nghiên cứu kiến trúc Transformer (self-attention, multi-head attention, positional encoding, residual + LayerNorm), biên soạn phần lý thuyết liên quan. | Hoàn thành |
-| 4 | Trần Nhật Duật | Cài đặt Transformer Encoder từ đầu bằng PyTorch, vòng lặp huấn luyện với Noam schedule, khảo sát learning rate và vị trí LayerNorm, đánh giá trên tập test; phân tích kết quả và lỗi dự đoán. | Hoàn thành |
+| 4 | Trần Nhật Duật | Cài đặt Transformer Encoder từ đầu bằng PyTorch, vòng lặp huấn luyện với Noam schedule, đánh giá trên tập test; phân tích kết quả và lỗi dự đoán. | Hoàn thành |
+| 5 | Hồ Đức Thắng | Khảo sát ảnh hưởng của learning rate (phát hiện lỗi kết hợp `LambdaLR` với lịch Noam) và vị trí LayerNorm (Post-LN/Pre-LN), chạy thực nghiệm nhiều seed và tổng hợp kết quả (mục 3.4.4). | Hoàn thành |
+| 6 | Hồ Đức Thắng | Fine-tune mô hình pretrained PhoBERT trên cùng dữ liệu làm mốc tham chiếu, đối chiếu với mô hình tự cài đặt (mục 3.4.5). | Hoàn thành |
 
 ---
 
