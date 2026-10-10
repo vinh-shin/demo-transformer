@@ -19,7 +19,7 @@ KHOA **CÔNG NGHỆ THÔNG TIN**
 > **Học viên thực hiện:**
 > 2611318 - **Vòng Vĩnh Shìn**
 > 2611302 - **Trần Nhật Duật**
-> [MSHV] - **Hồ Đức Thắng**
+> 2611320 - **Hồ Đức Thắng**
 
 <div align="center">
 
@@ -35,7 +35,7 @@ KHOA **CÔNG NGHỆ THÔNG TIN**
 |---|---|---|---|---|
 | 1 | 2611318 | Vòng Vĩnh Shìn | 100% | |
 | 2 | 2611302 | Trần Nhật Duật | 100% | |
-| 3 | [MSHV] | Hồ Đức Thắng | 100% | |
+| 3 | 2611320 | Hồ Đức Thắng | 100% | |
 
 ## BẢNG PHÂN CÔNG NHIỆM VỤ
 
@@ -43,11 +43,11 @@ KHOA **CÔNG NGHỆ THÔNG TIN**
 
 | STT | Họ và tên | Nhiệm vụ được phân công | Kết quả |
 |---|---|---|---|
-| 1 | Trần Nhật Duật | Tìm hiểu bài toán phát hiện bình luận độc hại, các hướng tiếp cận (luật, học máy truyền thống, RNN/CNN), khảo sát dataset ViHSD; biên soạn phần lý thuyết liên quan. | Hoàn thành |
-| 2 | Vòng Vĩnh Shìn | Cài đặt khối tiền xử lý dữ liệu (làm sạch, tách từ), xây dựng vocab, mã hoá câu, `Dataset`/`DataLoader`; tham gia thực nghiệm. | Hoàn thành |
-| 3 | Vòng Vĩnh Shìn | Nghiên cứu kiến trúc Transformer (self-attention, multi-head attention, positional encoding, residual + LayerNorm), biên soạn phần lý thuyết liên quan. | Hoàn thành |
+| 1 | Trần Nhật Duật | Tìm hiểu bài toán phát hiện bình luận độc hại, các hướng tiếp cận (luật, học máy truyền thống, RNN và CNN), khảo sát dataset ViHSD; biên soạn phần lý thuyết liên quan. | Hoàn thành |
+| 2 | Vòng Vĩnh Shìn | Cài đặt khối tiền xử lý dữ liệu (làm sạch, tách từ), xây dựng vocab, mã hoá câu, `Dataset` và `DataLoader`; tham gia thực nghiệm. | Hoàn thành |
+| 3 | Vòng Vĩnh Shìn | Nghiên cứu kiến trúc Transformer (self-attention, multi-head attention, positional encoding, residual connection và LayerNorm), biên soạn phần lý thuyết liên quan. | Hoàn thành |
 | 4 | Trần Nhật Duật | Cài đặt Transformer Encoder từ đầu bằng PyTorch, vòng lặp huấn luyện với Noam schedule, đánh giá trên tập test; phân tích kết quả và lỗi dự đoán. | Hoàn thành |
-| 5 | Hồ Đức Thắng | Khảo sát ảnh hưởng của learning rate (phát hiện lỗi kết hợp `LambdaLR` với lịch Noam) và vị trí LayerNorm (Post-LN/Pre-LN), chạy thực nghiệm nhiều seed và tổng hợp kết quả (mục 3.4.4). | Hoàn thành |
+| 5 | Hồ Đức Thắng | Khảo sát ảnh hưởng của learning rate (phát hiện lỗi kết hợp `LambdaLR` với lịch Noam) và vị trí LayerNorm (Post-LN và Pre-LN), chạy thực nghiệm nhiều seed và tổng hợp kết quả (mục 3.4.4). | Hoàn thành |
 | 6 | Hồ Đức Thắng | Fine-tune mô hình pretrained PhoBERT trên cùng dữ liệu làm mốc tham chiếu, đối chiếu với mô hình tự cài đặt (mục 3.4.5). | Hoàn thành |
 
 ---
@@ -66,7 +66,7 @@ KHOA **CÔNG NGHỆ THÔNG TIN**
   - 2.2. Phân loại các phương pháp phát hiện bình luận độc hại
     - 2.2.1. Phương pháp dựa trên luật và từ điển
     - 2.2.2. Phương pháp học máy truyền thống
-    - 2.2.3. Phương pháp học sâu tuần tự (RNN/LSTM, CNN)
+    - 2.2.3. Phương pháp học sâu tuần tự (RNN, LSTM và CNN)
     - 2.2.4. So sánh mô hình tuần tự và Transformer
   - 2.3. Kiến trúc Transformer Encoder
     - 2.3.1. Token Embedding
@@ -105,17 +105,18 @@ KHOA **CÔNG NGHỆ THÔNG TIN**
 
 ## DANH MỤC BẢNG
 
-- Bảng 1: So sánh mô hình tuần tự (RNN/LSTM) và Transformer
+- Bảng 1: So sánh mô hình tuần tự (RNN, LSTM) và Transformer
 - Bảng 2: So sánh một số kiến trúc phát hiện bình luận độc hại và giải pháp trong đề tài
 - Bảng 3: Danh sách thư viện sử dụng
 - Bảng 4: Phân bố nhãn của dataset ViHSD
 - Bảng 5: Thông số cấu hình thực nghiệm
 - Bảng 6: Kết quả huấn luyện trên tập dev theo epoch
 - Bảng 7: Kết quả phân loại chi tiết trên tập test
-- Bảng 8: Kết quả định lượng thực nghiệm
-- Bảng 9: Kết quả khảo sát learning rate và vị trí LayerNorm
-- Bảng 10: So sánh Post-LN và Pre-LN qua 3 seed
-- Bảng 11: So sánh Transformer tự cài đặt với PhoBERT fine-tune
+- Bảng 8: Kết quả suy luận trên ba câu tự viết
+- Bảng 9: Kết quả định lượng thực nghiệm
+- Bảng 10: Kết quả khảo sát learning rate và vị trí LayerNorm
+- Bảng 11: So sánh Post-LN và Pre-LN qua 3 seed
+- Bảng 12: So sánh Transformer tự cài đặt với PhoBERT fine-tune
 
 ## DANH MỤC HÌNH ẢNH
 

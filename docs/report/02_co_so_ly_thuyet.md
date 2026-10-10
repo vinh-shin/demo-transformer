@@ -22,15 +22,15 @@ Phương pháp này duy trì một danh sách từ khoá xúc phạm (blacklist)
 
 Văn bản được biểu diễn thành vector đặc trưng thủ công như Bag-of-Words, TF-IDF hay n-gram ký tự, sau đó đưa vào các bộ phân loại như Logistic Regression, SVM, Naive Bayes [6]. Cách tiếp cận này học được từ dữ liệu, bền vững hơn phương pháp luật, nhưng biểu diễn thưa và mất thông tin thứ tự từ, khó nắm bắt ngữ nghĩa và quan hệ xa giữa các từ trong câu.
 
-### 2.2.3. Phương pháp học sâu tuần tự (RNN/LSTM, CNN)
+### 2.2.3. Phương pháp học sâu tuần tự (RNN, LSTM và CNN)
 
-Các mô hình học sâu học biểu diễn dày (dense embedding) cho từ và tự trích xuất đặc trưng. Mạng hồi quy RNN/LSTM [7] xử lý câu tuần tự từ trái sang phải, lưu thông tin qua trạng thái ẩn; mạng tích chập TextCNN [8] dùng các bộ lọc trượt để bắt n-gram cục bộ. Hạn chế chung là RNN không song song hoá được theo chiều thời gian và khó học phụ thuộc xa do gradient tiêu biến, còn CNN chỉ nhìn được ngữ cảnh trong phạm vi cửa sổ bộ lọc.
+Các mô hình học sâu học biểu diễn dày (dense embedding) cho từ và tự trích xuất đặc trưng. Mạng hồi quy RNN và biến thể LSTM [7] xử lý câu tuần tự từ trái sang phải, lưu thông tin qua trạng thái ẩn; mạng tích chập TextCNN [8] dùng các bộ lọc trượt để bắt n-gram cục bộ. Hạn chế chung là RNN không song song hoá được theo chiều thời gian và khó học phụ thuộc xa do gradient tiêu biến, còn CNN chỉ nhìn được ngữ cảnh trong phạm vi cửa sổ bộ lọc.
 
 ### 2.2.4. So sánh mô hình tuần tự và Transformer
 
 Transformer [1] loại bỏ hoàn toàn cơ chế hồi quy, thay bằng cơ chế **self-attention** cho phép mỗi từ tương tác trực tiếp với mọi từ khác trong câu chỉ qua một phép tính. Bảng 1 tóm tắt sự khác biệt giữa hai nhóm mô hình.
 
-| Tiêu chí | RNN/LSTM | Transformer |
+| Tiêu chí | RNN, LSTM | Transformer |
 |---|---|---|
 | Cách xử lý chuỗi | Tuần tự, từng bước thời gian | Song song toàn bộ chuỗi |
 | Độ dài đường đi giữa hai từ bất kỳ | $O(T)$ | $O(1)$ |
@@ -39,7 +39,7 @@ Transformer [1] loại bỏ hoàn toàn cơ chế hồi quy, thay bằng cơ ch�
 | Chi phí tính toán theo độ dài câu | $O(T \cdot d^2)$ | $O(T^2 \cdot d)$ |
 | Yêu cầu dữ liệu | Vừa phải | Lớn; thường cần pretraining để phát huy |
 
-*Bảng 1: So sánh mô hình tuần tự (RNN/LSTM) và Transformer*
+*Bảng 1: So sánh mô hình tuần tự (RNN, LSTM) và Transformer*
 
 Trong phạm vi đề tài này, nhóm lựa chọn tiếp cận theo hướng Transformer Encoder làm nền tảng lý thuyết và thực nghiệm chính. Do bài toán là phân loại (không cần sinh văn bản), chỉ phần Encoder của Transformer được sử dụng, tương tự như cách BERT [2] và PhoBERT [3] được xây dựng.
 
@@ -116,16 +116,16 @@ Sau attention, mỗi vị trí được đưa độc lập qua một mạng nơ-
 
 $$\text{FFN}(x) = W_2 \, \phi(W_1 x + b_1) + b_2$$
 
-với $W_1 \in \mathbb{R}^{d_{model} \times d_{ff}}$, $W_2 \in \mathbb{R}^{d_{ff} \times d_{model}}$, thường chọn $d_{ff} = 4 \cdot d_{model}$. Bài báo gốc dùng hàm kích hoạt ReLU; đề tài dùng GELU [12] theo cách của BERT [2]. Nếu attention đóng vai trò "trộn" thông tin giữa các vị trí, FFN đóng vai trò biến đổi phi tuyến biểu diễn tại từng vị trí.
+với $W_1 \in \mathbb{R}^{d_{model} \times d_{ff}}$, $W_2 \in \mathbb{R}^{d_{ff} \times d_{model}}$, thường chọn $d_{ff} = 4 \cdot d_{model}$. Bài báo gốc dùng hàm kích hoạt ReLU; đề tài dùng GELU [9] theo cách của BERT [2]. Nếu attention đóng vai trò "trộn" thông tin giữa các vị trí, FFN đóng vai trò biến đổi phi tuyến biểu diễn tại từng vị trí.
 
 ### 2.3.5. Residual Connection và Layer Normalization
 
-Mỗi khối con được bọc bởi residual connection [9] và layer normalization [10]. Theo kiến trúc Post-LN của bài báo gốc [1]:
+Mỗi khối con được bọc bởi residual connection [10] và layer normalization [11]. Theo kiến trúc Post-LN của bài báo gốc [1]:
 
 $$x' = \text{LayerNorm}(x + \text{Dropout}(\text{MultiHead}(x)))$$
 $$y = \text{LayerNorm}(x' + \text{Dropout}(\text{FFN}(x')))$$
 
-Residual connection giúp gradient truyền trực tiếp qua nhiều lớp, còn LayerNorm chuẩn hoá mỗi vector theo trung bình và độ lệch chuẩn trên chiều đặc trưng, giúp quá trình huấn luyện ổn định. Một biến thể phổ biến là Pre-LN, đặt LayerNorm trước mỗi khối con; Xiong và cộng sự [11] chỉ ra Pre-LN có gradient ổn định hơn ở giai đoạn đầu huấn luyện và ít phụ thuộc vào warm-up, trong khi Post-LN thường cần warm-up learning rate cẩn thận.
+Residual connection giúp gradient truyền trực tiếp qua nhiều lớp, còn LayerNorm chuẩn hoá mỗi vector theo trung bình và độ lệch chuẩn trên chiều đặc trưng, giúp quá trình huấn luyện ổn định. Một biến thể phổ biến là Pre-LN, đặt LayerNorm trước mỗi khối con; Xiong và cộng sự [12] chỉ ra Pre-LN có gradient ổn định hơn ở giai đoạn đầu huấn luyện và ít phụ thuộc vào warm-up, trong khi Post-LN thường cần warm-up learning rate cẩn thận.
 
 ## 2.4. Huấn luyện và đánh giá mô hình phân loại
 
@@ -143,7 +143,7 @@ Transformer thường được huấn luyện bằng Adam [13] với lịch họ
 
 $$lr(step) = d_{model}^{-0.5} \cdot \min\left(step^{-0.5}, \; step \cdot warmup^{-1.5}\right)$$
 
-Giai đoạn warm-up tránh cập nhật quá lớn khi trọng số còn ngẫu nhiên và các ước lượng moment của Adam chưa ổn định, đặc biệt quan trọng với kiến trúc Post-LN [11]. Ngoài ra, gradient clipping theo chuẩn [16] được dùng để giới hạn độ lớn gradient, tránh bùng nổ gradient trong các bước đầu.
+Giai đoạn warm-up tránh cập nhật quá lớn khi trọng số còn ngẫu nhiên và các ước lượng moment của Adam chưa ổn định, đặc biệt quan trọng với kiến trúc Post-LN [12]. Ngoài ra, gradient clipping theo chuẩn [14] được dùng để giới hạn độ lớn gradient, tránh bùng nổ gradient trong các bước đầu.
 
 ### 2.4.3. Các độ đo đánh giá
 

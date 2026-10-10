@@ -18,7 +18,7 @@ Xuất phát từ các lý do trên, đề tài của nhóm chúng em tập trun
 
 - Hệ thống hoá cơ sở lý thuyết về bài toán phát hiện bình luận độc hại và các hướng tiếp cận chính, trọng tâm là kiến trúc Transformer Encoder (embedding, positional encoding, scaled dot-product attention, multi-head attention, feed-forward, residual connection và layer normalization).
 - Cài đặt một pipeline hoàn chỉnh từ dữ liệu thô: tải dữ liệu, làm sạch và tách từ tiếng Việt, xây dựng từ điển, mã hoá câu, xây dựng mô hình, huấn luyện, đánh giá và suy luận trên câu mới.
-- Tự cài đặt toàn bộ các thành phần của Transformer Encoder bằng các khối cơ bản của PyTorch (`nn.Linear`, `nn.Embedding`, `nn.LayerNorm`,...), không dùng `nn.MultiheadAttention`, `nn.TransformerEncoder` hay thư viện HuggingFace `transformers`.
+- Tự cài đặt toàn bộ các thành phần của Transformer Encoder bằng các khối cơ bản của PyTorch (`nn.Linear`, `nn.Embedding`, `nn.LayerNorm`, v.v.), không dùng `nn.MultiheadAttention`, `nn.TransformerEncoder` hay thư viện HuggingFace `transformers`.
 - Thực nghiệm trên dataset ViHSD, thu thập số liệu định lượng gồm số tham số mô hình, loss, accuracy, precision, recall, F1 theo từng lớp và macro-F1, confusion matrix; đánh giá trung thực hạn chế của mô hình huấn luyện từ đầu trên dữ liệu nhỏ và mất cân bằng.
 
 ## 1.3. Đối tượng và phạm vi nghiên cứu
@@ -26,12 +26,12 @@ Xuất phát từ các lý do trên, đề tài của nhóm chúng em tập trun
 Đối tượng nghiên cứu của đề tài là kiến trúc Transformer Encoder và ứng dụng của nó trong bài toán phân loại văn bản, cụ thể là phát hiện bình luận độc hại tiếng Việt trên mạng xã hội.
 
 - Phạm vi lý thuyết: mô hình hoá bài toán phát hiện bình luận độc hại dưới dạng phân loại văn bản đa lớp; cấu trúc Transformer Encoder theo bài báo gốc *Attention Is All You Need* [1]; hàm mất mát cross-entropy có trọng số lớp, bộ tối ưu Adam, lịch học Noam và các độ đo đánh giá cho dữ liệu mất cân bằng.
-- Phạm vi thực nghiệm: cài đặt và huấn luyện mô hình trên dataset ViHSD [4] gồm khoảng 33.400 bình luận, giữ nguyên cách chia train/dev/test của tác giả; mô hình dùng từ điển mức từ (word-level) tự xây từ tập train, trọng số khởi tạo ngẫu nhiên.
+- Phạm vi thực nghiệm: cài đặt và huấn luyện mô hình trên dataset ViHSD [4] gồm khoảng 33.400 bình luận, giữ nguyên cách chia ba tập train, dev và test của tác giả; mô hình dùng từ điển mức từ (word-level) tự xây từ tập train, trọng số khởi tạo ngẫu nhiên.
 - Đề tài không triển khai: tiền huấn luyện (pretraining) trên corpus lớn, phần Decoder của Transformer, hay triển khai hệ thống kiểm duyệt trực tuyến. Mô hình pretrained PhoBERT [3] chỉ được fine-tune trên cùng dữ liệu để làm mốc tham chiếu, không phải đối tượng nghiên cứu chính.
 
 ## 1.4. Nội dung thực hiện
 
-- Khảo sát tài liệu, bài báo khoa học về phát hiện ngôn từ thù ghét/xúc phạm, kiến trúc Transformer và dataset ViHSD.
+- Khảo sát tài liệu, bài báo khoa học về phát hiện ngôn từ thù ghét và xúc phạm, kiến trúc Transformer và dataset ViHSD.
 - Xây dựng cơ sở lý thuyết, mô hình hoá bài toán phân loại bình luận ba lớp.
 - Thiết kế pipeline xử lý: tiền xử lý văn bản (làm sạch, tách từ), xây dựng từ điển và mã hoá câu, Transformer Encoder, mean pooling và lớp phân loại, huấn luyện và đánh giá.
 - Cài đặt bằng Python (PyTorch, underthesea, scikit-learn) trên Jupyter Notebook; thực nghiệm trên ViHSD; thu thập số liệu định lượng.

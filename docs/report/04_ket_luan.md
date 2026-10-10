@@ -14,16 +14,16 @@ Một kết quả quan trọng của đề tài là khảo sát ảnh hưởng c
 - Mô hình được huấn luyện từ trọng số ngẫu nhiên, không có tri thức ngôn ngữ tiền huấn luyện, chỉ học từ khoảng 24 nghìn câu với phần lớn là CLEAN; mô hình bắt đầu overfitting từ khoảng epoch 7.
 - Từ điển mức từ không xử lý được biến thể chính tả, teencode và từ mới; 8,4% token trên tập test là `<unk>`.
 - Kết quả phụ thuộc vào chất lượng tách từ của underthesea, vốn được huấn luyện trên văn bản chuẩn, chưa tối ưu cho ngôn ngữ mạng xã hội.
-- Kết quả dao động khoảng ±0,01 macro-F1 giữa các lần chạy (backend MPS không tất định tuyệt đối). Đề tài mới đánh giá ba seed cho hai cấu hình chính và khảo sát ba mức learning rate; chưa khảo sát các siêu tham số khác (số lớp, `d_model`, dropout, MAX_LEN). Vì đã xem kết quả test của nhiều cấu hình trong quá trình khảo sát, con số test có thể hơi lạc quan.
+- Kết quả macro-F1 chênh lệch khoảng 0,01 giữa các lần chạy (backend MPS không tất định tuyệt đối). Đề tài mới đánh giá ba seed cho hai cấu hình chính và khảo sát ba mức learning rate; chưa khảo sát các siêu tham số khác (số lớp, `d_model`, dropout, MAX_LEN). Vì đã xem kết quả test của nhiều cấu hình trong quá trình khảo sát, con số test có thể hơi lạc quan.
 - PhoBERT chỉ được fine-tune một lần với một bộ siêu tham số, nên so sánh ở mục 3.4.5 chỉ mang tính tham chiếu.
 - Mô hình chỉ xử lý theo dạng batch trong notebook, chưa đóng gói thành dịch vụ kiểm duyệt trực tuyến.
 
 ## 4.3. Hướng phát triển
 
-- Tăng số seed (ví dụ 5–10) và dùng một tập validation riêng tách từ train để chọn siêu tham số, giữ tập test hoàn toàn độc lập cho lần đánh giá cuối cùng.
+- Tăng số seed (ví dụ từ 5 đến 10 seed) và dùng một tập validation riêng tách từ train để chọn siêu tham số, giữ tập test hoàn toàn độc lập cho lần đánh giá cuối cùng.
 - Áp dụng early stopping theo dev macro-F1, tăng dropout hoặc weight decay để giảm overfitting; khảo sát thêm số lớp encoder, `d_model` và `MAX_LEN`.
-- Khởi tạo lớp embedding bằng word embedding tiếng Việt đã huấn luyện sẵn (ví dụ fastText [15]) thay vì ngẫu nhiên, hoặc tự tiền huấn luyện mô hình bằng masked language modeling trên corpus bình luận không gán nhãn.
-- Thay từ điển mức từ bằng tokenizer subword (BPE/WordPiece) để giảm tỉ lệ `<unk>` và xử lý tốt hơn các biến thể chính tả, teencode.
-- Thử focal loss [14] hoặc tăng cường dữ liệu cho các lớp thiểu số để cải thiện cân bằng giữa precision và recall của OFFENSIVE và HATE.
+- Khởi tạo lớp embedding bằng word embedding tiếng Việt đã huấn luyện sẵn (ví dụ fastText [17]) thay vì ngẫu nhiên, hoặc tự tiền huấn luyện mô hình bằng masked language modeling trên corpus bình luận không gán nhãn.
+- Thay từ điển mức từ bằng tokenizer subword (BPE hoặc WordPiece) để giảm tỉ lệ `<unk>` và xử lý tốt hơn các biến thể chính tả, teencode.
+- Thử focal loss [18] hoặc tăng cường dữ liệu cho các lớp thiểu số để cải thiện cân bằng giữa precision và recall của OFFENSIVE và HATE.
 - Trực quan hoá trọng số attention của mô hình đã huấn luyện trên các bình luận thật để phân tích mô hình "chú ý" vào những từ nào khi ra quyết định.
 - Thu hẹp khoảng cách với PhoBERT [3] theo hướng tiền huấn luyện nhẹ: pretrain chính mô hình nhỏ này bằng masked language modeling trên corpus bình luận tiếng Việt, rồi fine-tune trên ViHSD.
