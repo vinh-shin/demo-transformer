@@ -104,7 +104,7 @@ flowchart LR
 
 *Hình 2: Cơ chế Multi-Head Self-Attention*
 
-Để minh hoạ trực quan, nhóm cài đặt self-attention từng bước bằng NumPy trên câu ví dụ "Tôi yêu học máy" (notebook `demo.ipynb`, trọng số khởi tạo ngẫu nhiên, chưa huấn luyện). Mỗi hàng của ma trận trọng số là một phân phối xác suất cho biết token truy vấn "chú ý" bao nhiêu đến từng token còn lại, tổng mỗi hàng bằng 1 (Hình 3).
+Để minh hoạ trực quan, nhóm cài đặt self-attention từng bước bằng NumPy trên câu ví dụ "Tôi yêu học máy" (trọng số khởi tạo ngẫu nhiên, chưa huấn luyện). Mỗi hàng của ma trận trọng số là một phân phối xác suất cho biết token truy vấn "chú ý" bao nhiêu đến từng token còn lại, tổng mỗi hàng bằng 1 (Hình 3).
 
 ![Hình 3](images/hinh3_attention_heatmap_demo.png)
 

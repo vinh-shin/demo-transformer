@@ -35,6 +35,7 @@ Xuất phát từ các lý do trên, đề tài của nhóm chúng em tập trun
 - Xây dựng cơ sở lý thuyết, mô hình hoá bài toán phân loại bình luận ba lớp.
 - Thiết kế pipeline xử lý: tiền xử lý văn bản (làm sạch, tách từ), xây dựng từ điển và mã hoá câu, Transformer Encoder, mean pooling và lớp phân loại, huấn luyện và đánh giá.
 - Cài đặt bằng Python (PyTorch, underthesea, scikit-learn) trên Jupyter Notebook, thực nghiệm trên ViHSD và thu thập số liệu định lượng.
+- Xây dựng ứng dụng web minh hoạ (FastAPI và React) để gắn nhãn bình luận theo thời gian thực và trực quan hoá trọng số attention.
 - Phân tích, đánh giá kết quả đạt được, hạn chế và đề xuất hướng phát triển.
 
 ## 1.5. Phương pháp thực hiện
@@ -50,5 +51,6 @@ Sau khi hoàn thành, đề tài dự kiến đạt được các kết quả sa
 
 - Báo cáo trình bày có hệ thống cơ sở lý thuyết về bài toán phát hiện bình luận độc hại và kiến trúc Transformer Encoder, có trích dẫn nguồn tham khảo khoa học rõ ràng.
 - Một notebook hoàn chỉnh, có thể chạy lại được, cài đặt Transformer Encoder từ đầu, huấn luyện và đánh giá trên ViHSD, kèm hàm suy luận cho câu bình luận mới.
+- Một ứng dụng web minh hoạ cho phép nhập bình luận, nhận nhãn dự đoán ngay lập tức, xem các bước tiền xử lý và trọng số attention của từng câu.
 - Số liệu kết quả thực nghiệm thực tế mà nhóm thực hiện được (không phải số liệu minh hoạ) bao gồm kích thước từ điển, số tham số mô hình, loss và macro-F1 theo từng epoch, classification report và confusion matrix trên tập test.
 - Nhận xét, đánh giá trung thực về ưu điểm và hạn chế của một Transformer huấn luyện từ đầu không có tri thức tiền huấn luyện. Cuối cùng là đề xuất hướng phát triển tiếp theo.

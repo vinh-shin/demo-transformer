@@ -225,12 +225,12 @@ def predict(req: PredictRequest):
 
 
 @app.get("/api/samples")
-def samples(n: int = Query(10, ge=1, le=50), only_toxic: bool = False):
-    """Lấy ngẫu nhiên `n` câu từ tập test, kèm nhãn thật và dự đoán."""
+def samples(n: int = Query(10, ge=1, le=50), only_toxic: bool = False, seed: int | None = None):
+    """Lấy ngẫu nhiên `n` câu từ tập test, kèm nhãn thật và dự đoán. Truyền `seed` để lấy lại đúng bộ mẫu."""
     _require_ready()
     df = inference.load_test_set()
     pool = df[df["label_id"] != 0] if only_toxic else df
-    picked = pool.sample(n).reset_index(drop=True)
+    picked = pool.sample(n, random_state=seed).reset_index(drop=True)
     texts = picked["free_text"].astype(str).tolist()
     rows, summary = _classify(texts, picked["label_id"])
     for row, text in zip(rows, texts):

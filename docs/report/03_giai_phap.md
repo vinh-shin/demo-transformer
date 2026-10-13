@@ -357,3 +357,51 @@ Tuy nhiên, kết quả cũng bộc lộ nhiều hạn chế:
 - **Hạn chế của từ điển mức từ.** Có 8,4% token trên tập test bị mã hoá thành `<unk>`, nên một phần tín hiệu có thể bị mất. Ngôn ngữ mạng xã hội còn có nhiều biến thể của cùng một từ. Trong tập train, "nài" chỉ xuất hiện 4 lần so với 1.804 lần của "này", "zay" 8 lần so với 629 lần của "vậy", "wa" 41 lần so với 1.300 lần của "quá". Từ điển mức từ coi chúng là các token hoàn toàn khác nhau, nên embedding của các biến thể hiếm được học rất kém.
 
 Tóm lại, một Transformer Encoder nhỏ, tự cài đặt và huấn luyện từ đầu có thể đạt macro-F1 khoảng 0,61 ± 0,01 trên ViHSD sau khoảng 3,5 phút huấn luyện trên laptop, tương đương khoảng 93% kết quả của PhoBERT fine-tune dù chỉ có khoảng 1/75 số tham số. Tuy nhiên, điều này chỉ đạt được khi learning rate được thiết lập đúng. Hai lớp thiểu số, đặc biệt là OFFENSIVE, vẫn là điểm yếu chính. Đây là những vấn đề mà các hướng phát triển ở mục 4.3 (tiền huấn luyện, tokenizer subword, xử lý mất cân bằng) hướng tới giải quyết.
+
+## 3.6. Xây dựng ứng dụng minh hoạ
+
+Để đưa mô hình ra khỏi notebook và quan sát cách nó hoạt động trong một tình huống gần với thực tế, nhóm xây dựng một ứng dụng web minh hoạ. Ứng dụng mô phỏng khung bình luận của mạng xã hội: người dùng nhập bình luận, mô hình gắn nhãn ngay lập tức, bình luận độc hại được làm mờ giống một hệ thống kiểm duyệt. Với mỗi bình luận, người dùng có thể xem lại toàn bộ quá trình xử lý, từ câu sau làm sạch, câu sau tách từ đến trọng số attention của từng layer và head.
+
+### 3.6.1. Kiến trúc hệ thống
+
+Ứng dụng gồm ba thành phần, được minh hoạ trong Hình 9:
+
+- **Backend FastAPI.** Khi khởi động, server nạp checkpoint, từ điển và cấu hình do notebook huấn luyện lưu ra (mục 3.4.2, Bước 7), đồng thời chạy mô hình trên toàn bộ tập test một lần và lưu kết quả vào bộ nhớ đệm. Server dùng lại đúng các hàm làm sạch và tách từ của notebook, nên câu được xử lý giống hệt lúc huấn luyện. Các endpoint chính gồm `/api/analyze` (phân tích một câu, trả về nhãn, xác suất, token và ma trận attention của mọi layer và head), `/api/samples` (lấy ngẫu nhiên câu từ tập test) và `/api/model` (cấu hình và kết quả trên tập test). FastAPI tự sinh tài liệu API tại địa chỉ `/docs`.
+- **Giao diện web.** Viết bằng React, TypeScript và Tailwind CSS, giao tiếp với backend qua HTTP và JSON. Giao diện được build thành các file tĩnh và do chính FastAPI phục vụ trên cùng một cổng, nên toàn bộ ứng dụng chạy bằng một lệnh `make start`.
+- **Dữ liệu và mô hình.** Gồm checkpoint, từ điển, file cấu hình và tập test ViHSD. Ứng dụng không huấn luyện lại mô hình mà chỉ đọc các file này.
+
+![Hình 9](images/hinh9_kien_truc_ung_dung.png)
+
+*Hình 9: Kiến trúc ứng dụng minh hoạ*
+
+Khi suy luận, ứng dụng chạy mô hình trên CPU. Do backend MPS không tất định (mục 3.4.4), kết quả trên tập test mà ứng dụng tính lại (accuracy 0,8308 và macro-F1 0,6105) lệch nhẹ so với lần chạy chính thức ở Bảng 9 (0,8286 và 0,6083).
+
+### 3.6.2. Các chức năng chính
+
+**Mô phỏng bình luận.** Đây là màn hình chính của ứng dụng (Hình 10). Người dùng nhập bình luận và bấm Enter để gửi. Có thể gửi liên tục mà không cần chờ kết quả của bình luận trước. Mỗi bình luận được gắn nhãn CLEAN, OFFENSIVE hoặc HATE kèm độ tin cậy, viền bên trái tô theo màu của nhãn. Khi bật chế độ **Ẩn bình luận độc hại**, các bình luận OFFENSIVE và HATE bị làm mờ kèm cảnh báo, người dùng bấm **Xem** để hiện nội dung. Câu chỉ chứa đường dẫn hoặc mention sẽ rỗng sau khi làm sạch và được gắn nhãn TRỐNG. Phía trên khung bình luận có thống kê số bình luận theo từng nhãn. Lịch sử bình luận được lưu trong trình duyệt nên không mất khi tải lại trang.
+
+![Hình 10](images/hinh10_mo_phong_binh_luan.png)
+
+*Hình 10: Màn hình mô phỏng bình luận, hai bình luận HATE đang bị làm mờ*
+
+Các ví dụ trong Hình 10 cho thấy mô hình phân biệt được một số trường hợp tinh tế. Câu **"Bài này viết dở quá, đọc mà buồn ngủ"** mang ý chê nhưng không chứa từ ngữ xúc phạm nên được gán CLEAN. Câu **"Mẹ nó chứ, lại hết hàng rồi"** có từ ngữ thô tục nhưng không nhắm vào ai nên được gán OFFENSIVE, đúng với định nghĩa của ViHSD (mục 2.1). Câu **"Thằng ngu này nói chuyện chán vãi"** nhắm vào một người cụ thể nên được gán HATE.
+
+**Chi tiết bình luận.** Khi bấm vào một bình luận, ứng dụng mở cửa sổ chi tiết (Hình 11) gồm bốn phần: bình luận gốc, nhãn dự đoán kèm xác suất của ba lớp, các bước tiền xử lý (câu sau làm sạch, câu sau tách từ, số token, số token `<unk>`) và trọng số self-attention. Ở phần attention, người dùng chọn layer và head (hoặc trung bình các head). Mỗi token được tô nền theo mức attention mà nó nhận được từ các token khác. Token không có trong từ điển được đánh dấu bằng viền đứt. Heatmap bên dưới thể hiện đầy đủ ma trận trọng số, mỗi hàng là phân phối softmax của một query trên toàn bộ key.
+
+![Hình 11](images/hinh11_popup_chi_tiet.png)
+
+*Hình 11: Cửa sổ chi tiết của một bình luận được gán nhãn HATE*
+
+Trong ví dụ ở Hình 11, từ ghép `chán_vãi` không có trong từ điển nên được mã hoá thành `<unk>`. Ở layer cuối, phần lớn trọng số attention tập trung vào hai token "thằng" và "ngu", là những từ mang sắc thái xúc phạm trong câu. Cần lưu ý trọng số attention chỉ cho biết mô hình tổng hợp thông tin từ đâu, chưa đủ để kết luận đó là nguyên nhân của quyết định phân loại.
+
+**Ví dụ từ tập test.** Màn hình này lấy ngẫu nhiên một số câu từ tập test, có tuỳ chọn chỉ lấy câu độc hại, rồi hiển thị nhãn thật, nhãn dự đoán và độ tin cậy của từng câu (Hình 12). Bấm vào một dòng sẽ hiện phân tích chi tiết của câu đó, giống cửa sổ ở Hình 11. Trong ví dụ ở Hình 12, mô hình dự đoán đúng 5 trên 6 câu. Câu sai duy nhất có nhãn thật OFFENSIVE nhưng bị dự đoán thành HATE với độ tin cậy chỉ 48,3%, minh hoạ đúng điểm yếu đã phân tích ở mục 3.5.
+
+![Hình 12](images/hinh12_vi_du_tap_test.png)
+
+*Hình 12: Màn hình ví dụ từ tập test*
+
+**Thông tin mô hình.** Màn hình cuối tóm tắt kiến trúc mô hình, pipeline xử lý và kết quả trên tập test gồm precision, recall, F1 của từng lớp cùng confusion matrix (Hình 13). Các số liệu này được tính trực tiếp từ checkpoint mà ứng dụng đang dùng.
+
+![Hình 13](images/hinh13_thong_tin_mo_hinh.png)
+
+*Hình 13: Màn hình thông tin mô hình*

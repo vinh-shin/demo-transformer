@@ -7,7 +7,7 @@ KHOA **CÔNG NGHỆ THÔNG TIN**
 [LOGO HCMUTE]
 
 # BÁO CÁO ĐỒ ÁN MÔN HỌC
-# [TÊN MÔN HỌC]
+# DEEP LEARNING
 
 **ĐỀ TÀI:**
 **ỨNG DỤNG KỸ THUẬT TRANSFORMER**
@@ -23,7 +23,7 @@ KHOA **CÔNG NGHỆ THÔNG TIN**
 
 <div align="center">
 
-***TP. Hồ Chí Minh**, tháng [..] năm 2026*
+***TP. Hồ Chí Minh**, tháng 10 năm 2026*
 
 </div>
 
@@ -97,6 +97,9 @@ KHOA **CÔNG NGHỆ THÔNG TIN**
     - 3.4.4. Khảo sát ảnh hưởng của learning rate và vị trí LayerNorm
     - 3.4.5. Đối chiếu với mô hình pretrained PhoBERT
   - 3.5. Phân tích và đánh giá kết quả
+  - 3.6. Xây dựng ứng dụng minh hoạ
+    - 3.6.1. Kiến trúc hệ thống
+    - 3.6.2. Các chức năng chính
 - CHƯƠNG 4: KẾT LUẬN
   - 4.1. Kết luận
   - 4.2. Hạn chế
