@@ -29,9 +29,9 @@ KHOA **CÔNG NGHỆ THÔNG TIN**
 
 ---
 
-## THÔNG TIN NHÓM VÀ TỶ LỆ ĐÓNG GÓP
+## THÔNG TIN NHÓM VÀ TỈ LỆ ĐÓNG GÓP
 
-| STT | MSHV | Họ và tên | Tỷ lệ đóng góp (%) | Ghi chú |
+| STT | MSHV | Họ và tên | Tỉ lệ đóng góp (%) | Ghi chú |
 |---|---|---|---|---|
 | 1 | 2611318 | Vòng Vĩnh Shìn | 100% | |
 | 2 | 2611302 | Trần Nhật Duật | 100% | |
@@ -43,10 +43,10 @@ KHOA **CÔNG NGHỆ THÔNG TIN**
 
 | STT | Họ và tên | Nhiệm vụ được phân công | Kết quả |
 |---|---|---|---|
-| 1 | Trần Nhật Duật | Tìm hiểu bài toán phát hiện bình luận độc hại, các hướng tiếp cận (luật, học máy truyền thống, RNN và CNN), khảo sát dataset ViHSD; biên soạn phần lý thuyết liên quan. | Hoàn thành |
-| 2 | Vòng Vĩnh Shìn | Cài đặt khối tiền xử lý dữ liệu (làm sạch, tách từ), xây dựng vocab, mã hoá câu, `Dataset` và `DataLoader`; tham gia thực nghiệm. | Hoàn thành |
+| 1 | Trần Nhật Duật | Tìm hiểu bài toán phát hiện bình luận độc hại, các hướng tiếp cận (luật, học máy truyền thống, RNN và CNN), khảo sát dataset ViHSD và biên soạn phần lý thuyết liên quan. | Hoàn thành |
+| 2 | Vòng Vĩnh Shìn | Cài đặt khối tiền xử lý dữ liệu (làm sạch, tách từ), xây dựng vocab, mã hoá câu, `Dataset` và `DataLoader`, đồng thời tham gia thực nghiệm. | Hoàn thành |
 | 3 | Vòng Vĩnh Shìn | Nghiên cứu kiến trúc Transformer (self-attention, multi-head attention, positional encoding, residual connection và LayerNorm), biên soạn phần lý thuyết liên quan. | Hoàn thành |
-| 4 | Trần Nhật Duật | Cài đặt Transformer Encoder từ đầu bằng PyTorch, vòng lặp huấn luyện với Noam schedule, đánh giá trên tập test; phân tích kết quả và lỗi dự đoán. | Hoàn thành |
+| 4 | Trần Nhật Duật | Cài đặt Transformer Encoder từ đầu bằng PyTorch, vòng lặp huấn luyện với Noam schedule, đánh giá trên tập test, đồng thời phân tích kết quả và lỗi dự đoán. | Hoàn thành |
 | 5 | Hồ Đức Thắng | Khảo sát ảnh hưởng của learning rate (phát hiện lỗi kết hợp `LambdaLR` với lịch Noam) và vị trí LayerNorm (Post-LN và Pre-LN), chạy thực nghiệm nhiều seed và tổng hợp kết quả (mục 3.4.4). | Hoàn thành |
 | 6 | Hồ Đức Thắng | Fine-tune mô hình pretrained PhoBERT trên cùng dữ liệu làm mốc tham chiếu, đối chiếu với mô hình tự cài đặt (mục 3.4.5). | Hoàn thành |
 
