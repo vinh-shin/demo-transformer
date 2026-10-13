@@ -68,6 +68,14 @@ make install   # lần đầu: tạo .venv và cài requirements
 make start     # chạy app (đổi port: make start PORT=8600)
 ```
 
+Windows không có sẵn `make` — chạy trực tiếp (PowerShell hoặc cmd):
+
+```powershell
+python -m venv .venv
+.venv\Scripts\python -m pip install -r requirements.txt
+.venv\Scripts\python -m streamlit run app/app.py
+```
+
 App mở tại http://localhost:8501, gồm 3 tab:
 
 | Tab | Chức năng |

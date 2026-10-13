@@ -4,7 +4,9 @@ Chạy từ thư mục gốc project:
     make start      (hoặc: streamlit run app/app.py)
 """
 
+import html
 import sys
+import unicodedata
 from pathlib import Path
 
 import numpy as np
@@ -85,6 +87,22 @@ def get_model():
 @st.cache_data
 def load_test_set():
     return pd.read_csv(TEST_CSV)
+
+
+def read_uploaded_csv(uploaded):
+    """Đọc CSV upload; file lưu bằng Excel trên Windows thường dùng bảng mã cp1258/cp1252 thay vì UTF-8."""
+    for encoding in ("utf-8-sig", "cp1258", "cp1252"):
+        try:
+            uploaded.seek(0)
+            df = pd.read_csv(uploaded, encoding=encoding)
+        except UnicodeDecodeError:
+            continue
+        # cp1258 lưu dấu tiếng Việt dạng tổ hợp (NFD) → chuẩn hoá NFC cho khớp vocab.
+        for col in df.select_dtypes("object"):
+            df[col] = df[col].map(lambda v: unicodedata.normalize("NFC", v) if isinstance(v, str) else v)
+        return df
+    st.error("Không đọc được file CSV — hãy lưu lại với bảng mã UTF-8.")
+    st.stop()
 
 
 def tokenize(text: str, word2idx: dict, max_len: int):
@@ -176,10 +194,10 @@ def token_chips(tokens, is_unk, scores) -> str:
     chips = []
     for tok, unk, score in zip(tokens, is_unk, scores):
         border = "2px dashed #9ca3af" if unk else f"1px solid rgba({ACCENT_RGB},0.2)"
-        title = "Không có trong vocab → <unk>" if unk else f"Attention nhận được: {score:.2f}"
+        title = "Không có trong vocab → &lt;unk&gt;" if unk else f"Attention nhận được: {score:.2f}"
         chips.append(
             f"<span class='chip' title='{title}' style='border:{border};"
-            f"background:rgba({ACCENT_RGB},{0.06 + 0.7 * float(score):.2f})'>{tok.replace('_', ' ')}</span>"
+            f"background:rgba({ACCENT_RGB},{0.06 + 0.7 * float(score):.2f})'>{html.escape(tok.replace('_', ' '))}</span>"
         )
     return "<div style='line-height:2.3'>" + "".join(chips) + "</div>"
 
@@ -253,6 +271,10 @@ def render_full_analysis(text: str, true_label: str | None = None, key: str = "m
 if not (MODEL_DIR / "model_state_dict.pt").exists():
     st.error(f"Không tìm thấy checkpoint tại `{MODEL_DIR}`. Hãy chạy notebook "
              "`src/vihsd_transformer_from_scratch.ipynb` để train và lưu model trước.")
+    st.stop()
+if not TEST_CSV.exists():
+    st.error(f"Không tìm thấy tập test tại `{TEST_CSV}`. Hãy chạy notebook "
+             "`src/vihsd_transformer_from_scratch.ipynb` để tải dataset ViHSD trước.")
     st.stop()
 
 model, word2idx, config = get_model()
@@ -407,7 +429,7 @@ with tab_batch:
                      "accuracy, macro-F1 và confusion matrix. Có thể thử với data/vihsd/vihsd/test.csv.",
             )
             if uploaded is not None:
-                df = pd.read_csv(uploaded)
+                df = read_uploaded_csv(uploaded)
                 cols = list(df.columns)
                 c1, c2 = st.columns(2)
                 text_col = c1.selectbox("Cột văn bản", cols,
