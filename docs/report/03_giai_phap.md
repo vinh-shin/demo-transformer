@@ -7,9 +7,9 @@ Trước khi lựa chọn kiến trúc cài đặt, nhóm đã khảo sát các 
 | Kiến trúc | Biểu diễn đầu vào | Ưu điểm | Nhược điểm |
 |---|---|---|---|
 | TF-IDF kết hợp SVM hoặc Logistic Regression | Vector thưa n-gram mức từ hoặc ký tự | Nhanh, ít dữ liệu vẫn chạy được, dễ giải thích | Mất thứ tự từ, không hiểu ngữ cảnh, nhạy với biến thể chính tả |
-| BiLSTM, TextCNN [7], [8] | Word embedding (ngẫu nhiên hoặc pretrained) | Học được đặc trưng tự động, bắt được n-gram và ngữ cảnh cục bộ | RNN khó song song hoá, khó học phụ thuộc xa; CNN bị giới hạn bởi cửa sổ lọc |
-| Fine-tune PhoBERT [3] | Subword BPE, Transformer 12 lớp pretrained trên khoảng 20 GB văn bản tiếng Việt | Tận dụng tri thức ngôn ngữ có sẵn, thường cho kết quả tốt nhất | Mô hình lớn (khoảng 135 triệu tham số), cần GPU; bản chất bên trong bị che bởi thư viện |
-| **Giải pháp trong đề tài** | Từ điển mức từ tự xây từ tập train, embedding khởi tạo ngẫu nhiên | Tự cài đặt toàn bộ Transformer Encoder, minh hoạ trọn vẹn cơ chế attention; nhỏ gọn (khoảng 1,8 triệu tham số), chạy được trên laptop | Không có tri thức tiền huấn luyện; chỉ học từ khoảng 24 nghìn câu nên độ chính xác thấp hơn đáng kể |
+| BiLSTM, TextCNN [7], [8] | Word embedding (ngẫu nhiên hoặc pretrained) | Học được đặc trưng tự động, bắt được n-gram và ngữ cảnh cục bộ | RNN khó song song hoá, khó học phụ thuộc xa, còn CNN bị giới hạn bởi cửa sổ lọc |
+| Fine-tune PhoBERT [3] | Subword BPE, Transformer 12 lớp pretrained trên khoảng 20 GB văn bản tiếng Việt | Tận dụng tri thức ngôn ngữ có sẵn, thường cho kết quả tốt nhất | Mô hình lớn (khoảng 135 triệu tham số), cần GPU và bản chất bên trong bị che bởi thư viện |
+| **Giải pháp trong đề tài** | Từ điển mức từ tự xây từ tập train, embedding khởi tạo ngẫu nhiên | Tự cài đặt toàn bộ Transformer Encoder, minh hoạ trọn vẹn cơ chế attention, mô hình nhỏ gọn (khoảng 1,8 triệu tham số), chạy được trên laptop | Không có tri thức tiền huấn luyện, chỉ học từ khoảng 24 nghìn câu nên độ chính xác thấp hơn đáng kể |
 
 *Bảng 2: So sánh một số kiến trúc phát hiện bình luận độc hại và giải pháp trong đề tài*
 
@@ -36,11 +36,11 @@ flowchart TB
 
 Khối này tải dataset ViHSD từ kho mã nguồn của tác giả [4] (nếu chưa có sẵn) và đọc ba tập train, dev, test. Mỗi bình luận được làm sạch qua các bước: loại bỏ đường dẫn URL, loại bỏ mention dạng `@tên`, loại bỏ ký tự `#`, gộp khoảng trắng thừa và chuyển về chữ thường.
 
-Do tiếng Việt là ngôn ngữ đơn lập, một từ có nghĩa có thể gồm nhiều âm tiết (ví dụ "việt nam", "lò xo"), văn bản sau làm sạch được tách từ bằng thư viện underthesea [15]; các âm tiết của cùng một từ ghép được nối bằng dấu `_` (ví dụ `việt_nam`, `lò_xo`). Việc tách từ là bước tiền xử lý dữ liệu, không phải một phần của mô hình Transformer. Các câu bị rỗng sau khi làm sạch (ví dụ bình luận chỉ gồm một URL) bị loại bỏ, vì một chuỗi toàn `<pad>` sẽ làm toàn bộ attention mask bằng $-\infty$, gây lỗi NaN khi huấn luyện.
+Do tiếng Việt là ngôn ngữ đơn lập, một từ có nghĩa có thể gồm nhiều âm tiết (ví dụ "việt nam", "lò xo"), văn bản sau làm sạch được tách từ bằng thư viện underthesea [15]. Các âm tiết của cùng một từ ghép được nối bằng dấu `_` (ví dụ `việt_nam`, `lò_xo`). Việc tách từ là bước tiền xử lý dữ liệu, không phải một phần của mô hình Transformer. Các câu bị rỗng sau khi làm sạch (ví dụ bình luận chỉ gồm một URL) bị loại bỏ, vì một chuỗi toàn `<pad>` sẽ làm toàn bộ attention mask bằng $-\infty$, gây lỗi NaN khi huấn luyện.
 
 ### 3.2.2. Khối xây dựng từ điển và mã hoá câu
 
-Vì không dùng tokenizer có sẵn, nhóm tự xây từ điển mức từ (word-level) **chỉ từ tập train** để tránh rò rỉ thông tin từ tập dev và test. Các từ xuất hiện ít hơn `MIN_FREQ = 2` lần bị loại để giảm kích thước từ điển và tránh mô hình ghi nhớ các từ chỉ xuất hiện một lần. Hai token đặc biệt được thêm vào: `<pad>` (id = 0) dùng để đệm câu ngắn, và `<unk>` (id = 1) thay cho các từ không có trong từ điển.
+Vì không dùng tokenizer có sẵn, nhóm tự xây từ điển mức từ (word-level) **chỉ từ tập train** để tránh rò rỉ thông tin từ tập dev và test. Các từ xuất hiện ít hơn `MIN_FREQ = 2` lần bị loại để giảm kích thước từ điển và tránh mô hình ghi nhớ các từ chỉ xuất hiện một lần. Hai token đặc biệt được thêm vào: `<pad>` (id = 0) dùng để đệm câu ngắn và `<unk>` (id = 1) thay cho các từ không có trong từ điển.
 
 Mỗi câu được chuyển thành dãy chỉ số, cắt bớt nếu dài hơn `MAX_LEN` và đệm `<pad>` nếu ngắn hơn, tạo thành tensor có kích thước cố định để xử lý theo batch.
 
@@ -52,7 +52,7 @@ Dãy chỉ số được tra bảng `nn.Embedding` (với `padding_idx = 0` đ�
 
 Khối này gồm $N = 3$ lớp encoder giống nhau, mỗi lớp được tự cài đặt theo đúng mô tả ở mục 2.3:
 
-- `MultiHeadSelfAttention`: bốn phép chiếu $W_Q, W_K, W_V, W_O$ bằng `nn.Linear`; tensor được tách thành $h$ head bằng `view` và `transpose`; điểm attention được chia cho $\sqrt{d_k}$, các vị trí `<pad>` bị gán $-\infty$ bằng `masked_fill` trước softmax.
+- `MultiHeadSelfAttention`: bốn phép chiếu $W_Q, W_K, W_V, W_O$ bằng `nn.Linear`, tensor được tách thành $h$ head bằng `view` và `transpose`, điểm attention được chia cho $\sqrt{d_k}$, các vị trí `<pad>` bị gán $-\infty$ bằng `masked_fill` trước softmax.
 - `FeedForward`: gồm `Linear(d_model, d_ff)`, hàm kích hoạt GELU, Dropout và `Linear(d_ff, d_model)` nối tiếp nhau.
 - `TransformerEncoderLayer`: ghép hai khối trên theo kiến trúc Post-LN, mỗi khối có residual connection, dropout và LayerNorm.
 
@@ -68,7 +68,7 @@ Vector $h_{\text{câu}} \in \mathbb{R}^{d_{model}}$ được đưa qua một l�
 
 ### 3.2.6. Khối huấn luyện, đánh giá và suy luận
 
-Vòng lặp huấn luyện được viết tay, không dùng `Trainer` của các thư viện bậc cao. Mỗi bước gồm: lan truyền thuận, tính weighted cross-entropy (mục 2.4.1), lan truyền ngược, gradient clipping với chuẩn tối đa 1,0, cập nhật bằng Adam, và cập nhật learning rate theo lịch Noam (mục 2.4.2). Sau mỗi epoch, mô hình được đánh giá trên tập dev; trọng số có **macro-F1 trên dev cao nhất** được giữ lại để đánh giá cuối cùng trên tập test.
+Vòng lặp huấn luyện được viết tay, không dùng `Trainer` của các thư viện bậc cao. Mỗi bước gồm: lan truyền thuận, tính weighted cross-entropy (mục 2.4.1), lan truyền ngược, gradient clipping với chuẩn tối đa 1,0, cập nhật bằng Adam và cập nhật learning rate theo lịch Noam (mục 2.4.2). Sau mỗi epoch, mô hình được đánh giá trên tập dev. Trọng số có **macro-F1 trên dev cao nhất** được giữ lại để đánh giá cuối cùng trên tập test.
 
 Hàm `predict_toxicity()` thực hiện suy luận trên một câu mới qua đúng chuỗi xử lý như lúc huấn luyện (làm sạch, tách từ, mã hoá, đưa qua mô hình và tính softmax), trả về nhãn dự đoán kèm xác suất của từng lớp.
 
@@ -81,7 +81,7 @@ Toàn bộ pipeline được cài đặt bằng Python và chạy trong Jupyter 
 | Thư viện | Phiên bản | Vai trò trong pipeline |
 |---|---|---|
 | Python | 3.13.7 | Ngôn ngữ cài đặt toàn bộ pipeline, chạy trong Jupyter Notebook |
-| PyTorch [16] | 2.14.0 | Chỉ dùng các khối cơ bản (`nn.Linear`, `nn.Embedding`, `nn.LayerNorm`, `nn.Dropout`, `torch.optim`) để tự cài đặt Transformer; tăng tốc bằng Apple MPS |
+| PyTorch [16] | 2.14.0 | Chỉ dùng các khối cơ bản (`nn.Linear`, `nn.Embedding`, `nn.LayerNorm`, `nn.Dropout`, `torch.optim`) để tự cài đặt Transformer, tăng tốc bằng Apple MPS |
 | underthesea [15] | 9.5.0 | Tách từ tiếng Việt (`word_tokenize`) ở bước tiền xử lý |
 | pandas | 3.0.6 | Đọc CSV, quản lý dữ liệu dạng bảng |
 | NumPy | 2.5.3 | Tính toán mảng, xử lý kết quả dự đoán |
@@ -93,7 +93,7 @@ Toàn bộ pipeline được cài đặt bằng Python và chạy trong Jupyter 
 
 *Bảng 3: Danh sách thư viện sử dụng*
 
-Mô hình chính **không** sử dụng `nn.MultiheadAttention`, `nn.TransformerEncoder`, `nn.TransformerEncoderLayer`, thư viện HuggingFace `transformers`, hay bất kỳ embedding hoặc mô hình pretrained nào.
+Mô hình chính **không** sử dụng `nn.MultiheadAttention`, `nn.TransformerEncoder`, `nn.TransformerEncoderLayer`, thư viện HuggingFace `transformers` hay bất kỳ embedding hoặc mô hình pretrained nào.
 
 ### 3.3.2. Môi trường cài đặt
 
@@ -136,12 +136,12 @@ Notebook được chạy tuần tự theo đúng thứ tự cell: cài thư vi�
 | Số chiều feed-forward (D_FF) | 512 |
 | Số lớp encoder (N_LAYERS) | 3 |
 | Dropout | 0,1 |
-| Batch size | 32 với tập train; 64 với tập dev và test |
+| Batch size | 32 với tập train, 64 với tập dev và test |
 | Số epoch (EPOCHS) | 15 |
 | Optimizer | Adam, $\beta = (0{,}9;\ 0{,}98)$, $\epsilon = 10^{-9}$ |
 | Lịch học | Noam qua `LambdaLR` với hệ số `lr = 0,2` (LR đỉnh khoảng $5{,}3 \times 10^{-4}$), warm-up 1.128 bước (10% tổng số bước) |
 | Gradient clipping | max norm = 1,0 |
-| Hàm mất mát | Cross-entropy có trọng số lớp (0,4031; 4,9911; 3,1360) |
+| Hàm mất mát | Cross-entropy có trọng số lớp: 0,4031 (CLEAN), 4,9911 (OFFENSIVE), 3,1360 (HATE) |
 | Tiêu chí chọn mô hình | Macro-F1 cao nhất trên tập dev |
 | Seed | 42 |
 
@@ -153,7 +153,7 @@ Phần này bám theo sơ đồ tổng quát ở mục 3.2 và minh hoạ cách 
 
 **Bước 1: Tải và đọc dữ liệu.**
 
-Hàm `load_vihsd()` kiểm tra thư mục `data/vihsd`; nếu chưa có dữ liệu, chương trình tải file `vihsd.zip` từ kho mã nguồn của tác giả và giải nén. Ba file `train.csv`, `dev.csv`, `test.csv` được đọc bằng pandas, mỗi file gồm hai cột `free_text` (nội dung bình luận) và `label_id` (nhãn 0, 1 hoặc 2). Số dòng của ba tập lần lượt là 24.048, 2.672 và 6.680.
+Hàm `load_vihsd()` kiểm tra thư mục `data/vihsd`. Nếu chưa có dữ liệu, chương trình tải file `vihsd.zip` từ kho mã nguồn của tác giả và giải nén. Ba file `train.csv`, `dev.csv`, `test.csv` được đọc bằng pandas, mỗi file gồm hai cột `free_text` (nội dung bình luận) và `label_id` (nhãn 0, 1 hoặc 2). Số dòng của ba tập lần lượt là 24.048, 2.672 và 6.680.
 
 **Bước 2: Tiền xử lý văn bản.**
 
@@ -162,13 +162,13 @@ Hàm `preprocess_df()` áp dụng `clean_text()` và `segment_text()` cho từng
 - Gốc: "Đúng là bọn mắt híp lò xo thụt :))) bên việt nam t cái này ra cách đây 10 năm r và bọn t gọi là cái l :)))"
 - Sau tiền xử lý: `đúng là bọn mắt híp lò_xo thụt :))) bên việt_nam t cái này ra cách đây 10 năm r và bọn t gọi_là cái l :)))`
 
-Có thể thấy các từ ghép như `lò_xo`, `việt_nam`, `gọi_là` được nhận diện đúng, trong khi các từ viết tắt đặc trưng của mạng xã hội ("t", "r", "l") và emoticon ":)))" được giữ nguyên. Sau bước này có 1 dòng trong tập train bị loại do rỗng sau khi làm sạch; tập dev và test không có dòng nào bị loại. Toàn bộ bước tiền xử lý ba tập mất khoảng 36 giây.
+Có thể thấy các từ ghép như `lò_xo`, `việt_nam`, `gọi_là` được nhận diện đúng, trong khi các từ viết tắt đặc trưng của mạng xã hội ("t", "r", "l") và emoticon ":)))" được giữ nguyên. Sau bước này có 1 dòng trong tập train bị loại do rỗng sau khi làm sạch, còn tập dev và test không có dòng nào bị loại. Toàn bộ bước tiền xử lý ba tập mất khoảng 36 giây.
 
 **Bước 3: Xây dựng từ điển và chọn độ dài câu.**
 
-Tập train có 24.448 từ phân biệt; sau khi loại các từ xuất hiện dưới 2 lần, từ điển còn 9.428 token (gồm `<pad>` và `<unk>`). Mười token phổ biến nhất là `.`, `,`, `là`, `có`, `mà`, `cho`, `thì`, `đi`, `này`, `:`, chủ yếu là dấu câu và hư từ.
+Tập train có 24.448 từ phân biệt. Sau khi loại các từ xuất hiện dưới 2 lần, từ điển còn 9.428 token (gồm `<pad>` và `<unk>`). Mười token phổ biến nhất là `.`, `,`, `là`, `có`, `mà`, `cho`, `thì`, `đi`, `này`, `:`, chủ yếu là dấu câu và hư từ.
 
-Để chọn `MAX_LEN`, nhóm khảo sát phân bố độ dài câu sau tách từ trên tập train (Hình 5). Độ dài trung bình là 10,8 token, trung vị 8 token, percentile 95% là 30 token và percentile 99% là 57 token; phân phối lệch phải mạnh với câu dài nhất lên đến 1.290 token. Giá trị `MAX_LEN = 48` bao phủ khoảng 98,3% số câu; trên tập test chỉ có 1,7% số câu bị cắt bớt.
+Để chọn `MAX_LEN`, nhóm khảo sát phân bố độ dài câu sau tách từ trên tập train (Hình 5). Độ dài trung bình là 10,8 token, trung vị 8 token, percentile 95% là 30 token và percentile 99% là 57 token. Phân phối lệch phải mạnh với câu dài nhất lên đến 1.290 token. Giá trị `MAX_LEN = 48` bao phủ khoảng 98,3% số câu. Trên tập test chỉ có 1,7% số câu bị cắt bớt.
 
 ![Hình 5](images/hinh5_phan_bo_do_dai_cau.png)
 
@@ -249,7 +249,7 @@ Cuối cùng, hàm `predict_toxicity()` được thử trên ba câu tự viết
 
 *Bảng 8: Kết quả suy luận trên ba câu tự viết*
 
-Mô hình phân loại đúng hướng cả ba câu với độ tự tin cao (xác suất lớp dự đoán trên 0,98). Câu "Thằng ngu này nói chuyện chán vãi" được gán HATE vì nhắm vào một người cụ thể; theo định nghĩa của ViHSD, câu này có thể được gán OFFENSIVE hoặc HATE tuỳ người gán nhãn.
+Mô hình phân loại đúng hướng cả ba câu với độ tự tin cao (xác suất lớp dự đoán trên 0,98). Câu "Thằng ngu này nói chuyện chán vãi" được gán HATE vì nhắm vào một người cụ thể. Tuy nhiên, theo định nghĩa của ViHSD, câu này có thể được gán OFFENSIVE hoặc HATE tuỳ người gán nhãn.
 
 ### 3.4.3. Kết quả thực nghiệm
 
@@ -257,7 +257,9 @@ Bảng 9 tổng hợp các chỉ số định lượng chính của lần chạy
 
 | Chỉ số | Giá trị | Ghi chú |
 |---|---|---|
-| Số mẫu train; dev; test | 24.047; 2.672; 6.680 | Đã loại 1 dòng rỗng ở train |
+| Số mẫu tập train | 24.047 | Đã loại 1 dòng rỗng |
+| Số mẫu tập dev | 2.672 | |
+| Số mẫu tập test | 6.680 | |
 | Kích thước từ điển | 9.428 token | Từ 24.448 từ phân biệt, MIN_FREQ = 2 |
 | Tỉ lệ `<unk>` trên test | 8,4% | Token không có trong từ điển train |
 | Tổng số tham số | 1.801.987 | 67% nằm ở lớp embedding |
@@ -267,21 +269,23 @@ Bảng 9 tổng hợp các chỉ số định lượng chính của lần chạy
 | Dev macro-F1 tốt nhất | 0,6156 | Epoch 11 |
 | Test accuracy | 0,8286 | 1.145 trên 6.680 mẫu dự đoán sai (17,1%) |
 | **Test macro-F1** | **0,6083** | Độ đo chính |
-| F1 CLEAN; OFFENSIVE; HATE (test) | 0,9109; 0,3871; 0,5269 | |
+| F1 lớp CLEAN (test) | 0,9109 | |
+| F1 lớp OFFENSIVE (test) | 0,3871 | |
+| F1 lớp HATE (test) | 0,5269 | |
 
 *Bảng 9: Kết quả định lượng thực nghiệm*
 
 ### 3.4.4. Khảo sát ảnh hưởng của learning rate và vị trí LayerNorm
 
-Trong lần chạy đầu tiên, optimizer được khai báo với `lr = 1e-3`. Do `LambdaLR` **nhân** learning rate ban đầu với giá trị trả về của hàm Noam, trong khi công thức Noam vốn đã là learning rate tuyệt đối, learning rate thực tế chỉ đạt đỉnh $10^{-3} \times 128^{-0{,}5} \times 1128^{-0{,}5} \approx 2{,}6 \times 10^{-6}$. Mô hình khi đó gần như không học được: train loss dừng ở khoảng 1,04, sát giá trị $\ln 3 \approx 1{,}099$ của một bộ phân loại đoán đều ba lớp. Nhóm phát hiện lỗi này khi phân tích kết quả, và thực hiện thêm các lần chạy với cùng dữ liệu, cùng kiến trúc và cùng seed, chỉ thay đổi hệ số learning rate và vị trí LayerNorm (Bảng 10, Hình 8).
+Trong lần chạy đầu tiên, optimizer được khai báo với `lr = 1e-3`. Do `LambdaLR` **nhân** learning rate ban đầu với giá trị trả về của hàm Noam, trong khi công thức Noam vốn đã là learning rate tuyệt đối, learning rate thực tế chỉ đạt đỉnh $10^{-3} \times 128^{-0{,}5} \times 1128^{-0{,}5} \approx 2{,}6 \times 10^{-6}$. Mô hình khi đó gần như không học được: train loss dừng ở khoảng 1,04, sát giá trị $\ln 3 \approx 1{,}099$ của một bộ phân loại đoán đều ba lớp. Nhóm phát hiện lỗi này khi phân tích kết quả và thực hiện thêm các lần chạy với cùng dữ liệu, cùng kiến trúc và cùng seed, chỉ thay đổi hệ số learning rate và vị trí LayerNorm (Bảng 10, Hình 8).
 
-| Lần chạy | Kiến trúc | Hệ số `lr` | LR đỉnh | Train loss cuối | Dev macro-F1 tốt nhất (epoch) | Test acc | **Test macro-F1** | F1 CLEAN; OFF; HATE |
-|---|---|---|---|---|---|---|---|---|
-| (1) | Post-LN | $10^{-3}$ | khoảng $2{,}6 \times 10^{-6}$ | 1,0435 | 0,3905 (15) | 0,5683 | 0,3780 | 0,716; 0,141; 0,277 |
-| (2) | Post-LN | 1,0 | khoảng $2{,}6 \times 10^{-3}$ | 1,0031 | 0,4286 (14) | 0,6576 | 0,4061 | 0,790; 0,089; 0,340 |
-| **(3)** | **Post-LN** | **0,2** | **khoảng $5{,}3 \times 10^{-4}$** | **0,3570** | **0,6156 (11)** | **0,8286** | **0,6083** | **0,911; 0,387; 0,527** |
-| (3') | Post-LN, chạy lặp lại | 0,2 | khoảng $5{,}3 \times 10^{-4}$ | 0,3624 | 0,6153 (11) | 0,8169 | 0,5988 | 0,904; 0,354; 0,539 |
-| (4) | Pre-LN | 0,2 | khoảng $5{,}3 \times 10^{-4}$ | 0,2673 | 0,6184 (15) | 0,8365 | 0,6045 | 0,917; 0,363; 0,533 |
+| Lần chạy | Kiến trúc | Hệ số `lr` | LR đỉnh | Train loss cuối | Dev macro-F1 tốt nhất (epoch) | Test acc | **Test macro-F1** | F1 CLEAN | F1 OFF | F1 HATE |
+|---|---|---|---|---|---|---|---|---|---|---|
+| (1) | Post-LN | $10^{-3}$ | khoảng $2{,}6 \times 10^{-6}$ | 1,0435 | 0,3905 (15) | 0,5683 | 0,3780 | 0,716 | 0,141 | 0,277 |
+| (2) | Post-LN | 1,0 | khoảng $2{,}6 \times 10^{-3}$ | 1,0031 | 0,4286 (14) | 0,6576 | 0,4061 | 0,790 | 0,089 | 0,340 |
+| **(3)** | **Post-LN** | **0,2** | **khoảng $5{,}3 \times 10^{-4}$** | **0,3570** | **0,6156 (11)** | **0,8286** | **0,6083** | **0,911** | **0,387** | **0,527** |
+| (3') | Post-LN, chạy lặp lại | 0,2 | khoảng $5{,}3 \times 10^{-4}$ | 0,3624 | 0,6153 (11) | 0,8169 | 0,5988 | 0,904 | 0,354 | 0,539 |
+| (4) | Pre-LN | 0,2 | khoảng $5{,}3 \times 10^{-4}$ | 0,2673 | 0,6184 (15) | 0,8365 | 0,6045 | 0,917 | 0,363 | 0,533 |
 
 *Bảng 10: Kết quả khảo sát learning rate và vị trí LayerNorm (cùng dữ liệu, cùng seed, 15 epoch)*
 
@@ -306,7 +310,7 @@ Từ Bảng 10 và Hình 8 có thể rút ra các nhận xét sau:
 
 *Bảng 11: So sánh Post-LN và Pre-LN qua 3 seed (42, 43, 44), `lr = 0,2`, 15 epoch*
 
-Test macro-F1 của từng seed lần lượt là 0,6083; 0,6141 và 0,5983 với Post-LN, và 0,6045; 0,6092 và 0,5950 với Pre-LN. Chênh lệch trung bình giữa hai kiến trúc (0,004) nhỏ hơn độ lệch chuẩn của mỗi kiến trúc (khoảng từ 0,007 đến 0,008), và khoảng giá trị của hai bên chồng lấn nhau. Do đó, trên bộ dữ liệu và quy mô mô hình này, **không có khác biệt đáng kể** giữa Post-LN và Pre-LN khi learning rate đã được chọn phù hợp. Ưu điểm ổn định của Pre-LN [12] chủ yếu thể hiện ở vùng learning rate lớn hoặc mô hình sâu hơn, là những trường hợp đề tài chưa khảo sát.
+Với Post-LN, test macro-F1 của seed 42 là 0,6083, seed 43 là 0,6141 và seed 44 là 0,5983. Với Pre-LN, các giá trị tương ứng là 0,6045 (seed 42), 0,6092 (seed 43) và 0,5950 (seed 44). Chênh lệch trung bình giữa hai kiến trúc (0,004) nhỏ hơn độ lệch chuẩn của mỗi kiến trúc (khoảng từ 0,007 đến 0,008) và khoảng giá trị của hai bên chồng lấn nhau. Do đó, trên bộ dữ liệu và quy mô mô hình này, **không có khác biệt đáng kể** giữa Post-LN và Pre-LN khi learning rate đã được chọn phù hợp. Ưu điểm ổn định của Pre-LN [12] chủ yếu thể hiện ở vùng learning rate lớn hoặc mô hình sâu hơn, là những trường hợp đề tài chưa khảo sát.
 
 **Về cách chọn cấu hình cuối cùng.** Toàn bộ việc chọn cấu hình đều dựa trên **tập dev**, tập test chỉ dùng để báo cáo kết quả:
 
@@ -318,19 +322,22 @@ Vì nhóm đã xem kết quả test của nhiều cấu hình trong quá trình 
 
 ### 3.4.5. Đối chiếu với mô hình pretrained PhoBERT
 
-Để có mốc tham chiếu cho kết quả của mô hình tự cài đặt, nhóm fine-tune mô hình pretrained `vinai/phobert-base` [3] trên cùng cách chia dữ liệu, cùng bước tiền xử lý (làm sạch và tách từ bằng underthesea) và cùng class weight. Phần này được cài đặt trong notebook riêng `src/vihsd_phobert_toxic_detection.ipynb`, dùng thư viện HuggingFace `transformers`, và không phải trọng tâm của đề tài. Cấu hình fine-tune gồm: tokenizer BPE của PhoBERT với độ dài tối đa 96 subword, 4 epoch, batch size 16, learning rate $2 \times 10^{-5}$ với 10% warm-up, weight decay 0,01, chọn checkpoint theo dev macro-F1.
+Để có mốc tham chiếu cho kết quả của mô hình tự cài đặt, nhóm fine-tune mô hình pretrained `vinai/phobert-base` [3] trên cùng cách chia dữ liệu, cùng bước tiền xử lý (làm sạch và tách từ bằng underthesea) và cùng class weight. Phần này được cài đặt trong notebook riêng `src/vihsd_phobert_toxic_detection.ipynb`, dùng thư viện HuggingFace `transformers` và không phải trọng tâm của đề tài. Cấu hình fine-tune gồm: tokenizer BPE của PhoBERT với độ dài tối đa 96 subword, 4 epoch, batch size 16, learning rate $2 \times 10^{-5}$ với 10% warm-up, weight decay 0,01, chọn checkpoint theo dev macro-F1.
 
 | Tiêu chí | Transformer tự cài đặt (Post-LN, 3 seed) | PhoBERT fine-tune |
 |---|---|---|
 | Trọng số ban đầu | Ngẫu nhiên | Pretrained trên khoảng 20 GB văn bản tiếng Việt |
 | Tokenizer | Word-level tự xây (9.428 token) | BPE của PhoBERT (64.001 token) |
-| Số lớp encoder; $d_{model}$ | 3; 128 | 12; 768 |
+| Số lớp encoder | 3 | 12 |
+| Số chiều mô hình $d_{model}$ | 128 | 768 |
 | Số tham số | 1.801.987 | 135.000.579 (gấp khoảng 75 lần) |
 | Thời gian huấn luyện (M1 Pro, MPS) | khoảng 3,5 phút (15 epoch) | khoảng 74 phút (4 epoch) |
 | Dev macro-F1 tốt nhất | 0,6111 ± 0,0049 | 0,6734 (epoch 3) |
 | Test accuracy | 0,8233 ± 0,0047 | 0,8510 |
 | **Test macro-F1** | **0,6069 ± 0,0080** | **0,6539** |
-| F1 CLEAN; OFFENSIVE; HATE | 0,908; 0,378; 0,536 | 0,927; 0,440; 0,596 |
+| F1 lớp CLEAN | 0,908 | 0,927 |
+| F1 lớp OFFENSIVE | 0,378 | 0,440 |
+| F1 lớp HATE | 0,536 | 0,596 |
 
 *Bảng 12: So sánh Transformer tự cài đặt với PhoBERT fine-tune trên cùng dữ liệu ViHSD*
 
@@ -338,15 +345,63 @@ PhoBERT cho test macro-F1 cao hơn khoảng 0,047, vượt trội ở cả ba l�
 
 ## 3.5. Phân tích và đánh giá kết quả
 
-Kết quả tích cực nhất là pipeline chạy hoàn chỉnh từ dữ liệu thô đến suy luận trên câu mới, với toàn bộ thành phần Transformer tự cài đặt. Sau khi điều chỉnh learning rate, mô hình đạt **test macro-F1 = 0,6083** và accuracy 0,8286 ở lần chạy chính thức, trung bình ba seed là 0,6069 ± 0,0080. Kết quả này vượt xa các mốc tham chiếu đơn giản: luôn dự đoán CLEAN cho macro-F1 khoảng 0,30, còn đoán ngẫu nhiên đều ba lớp cho khoảng 0,25. Mô hình phát hiện được 62,7% số bình luận HATE (431 trên 688 mẫu), và các câu demo được phân loại đúng với độ tự tin cao.
+Kết quả tích cực nhất là pipeline chạy hoàn chỉnh từ dữ liệu thô đến suy luận trên câu mới, với toàn bộ thành phần Transformer tự cài đặt. Sau khi điều chỉnh learning rate, mô hình đạt **test macro-F1 = 0,6083** và accuracy 0,8286 ở lần chạy chính thức, trung bình ba seed là 0,6069 ± 0,0080. Kết quả này vượt xa các mốc tham chiếu đơn giản: luôn dự đoán CLEAN cho macro-F1 khoảng 0,30, còn đoán ngẫu nhiên đều ba lớp cho khoảng 0,25. Mô hình phát hiện được 62,7% số bình luận HATE (431 trên 688 mẫu) và các câu demo được phân loại đúng với độ tự tin cao.
 
 Tuy nhiên, kết quả cũng bộc lộ nhiều hạn chế:
 
-- **Lớp OFFENSIVE vẫn khó phân biệt nhất.** F1 của OFFENSIVE là 0,3871; trong 444 mẫu OFFENSIVE chỉ có 174 mẫu (39,2%) được dự đoán đúng, 147 mẫu (33,1%) bị nhầm thành CLEAN và 123 mẫu (27,7%) bị nhầm thành HATE. Điều này phản ánh cả việc lớp này có ít mẫu nhất (1.606 mẫu train), lẫn ranh giới vốn mơ hồ giữa OFFENSIVE và HATE [6]. Ví dụ câu "Đánh chết mẹ thằng này đi" được gán nhãn OFFENSIVE nhưng mô hình dự đoán HATE. Đây là trường hợp mà chính người gán nhãn cũng có thể không thống nhất.
+- **Lớp OFFENSIVE vẫn khó phân biệt nhất.** F1 của OFFENSIVE là 0,3871. Trong 444 mẫu OFFENSIVE chỉ có 174 mẫu (39,2%) được dự đoán đúng, 147 mẫu (33,1%) bị nhầm thành CLEAN và 123 mẫu (27,7%) bị nhầm thành HATE. Điều này phản ánh cả việc lớp này có ít mẫu nhất (1.606 mẫu train), lẫn ranh giới vốn mơ hồ giữa OFFENSIVE và HATE [6]. Ví dụ câu "Đánh chết mẹ thằng này đi" được gán nhãn OFFENSIVE nhưng mô hình dự đoán HATE. Đây là trường hợp mà chính người gán nhãn cũng có thể không thống nhất.
 - **Precision của HATE còn thấp (0,4546).** Có 394 trên 5.548 bình luận CLEAN (7,1%) bị dự đoán là HATE. Đây là đánh đổi của class weight cao cho lớp thiểu số: mô hình ưu tiên "báo động nhầm" hơn là bỏ sót. Nhiều câu bị nhầm là câu ngắn, thiếu ngữ cảnh hoặc chứa từ lóng như "Lú TBT", "Cái này thầy live lúc nài zay tụi bay".
 - **Bắt đầu overfitting.** Từ epoch 7 trở đi, train loss vẫn giảm (từ 0,59 xuống 0,36) nhưng dev macro-F1 không tăng thêm mà dao động trong khoảng từ 0,57 đến 0,62. Với khoảng 1,8 triệu tham số, trong đó 1,2 triệu nằm ở lớp embedding, mô hình dễ ghi nhớ tập train nhỏ.
 - **Nhạy với siêu tham số tối ưu và không tất định.** Mục 3.4.4 cho thấy chỉ riêng hệ số learning rate đã làm test macro-F1 thay đổi từ 0,38 đến 0,61. Ngoài ra, kết quả chênh lệch khoảng 0,01 giữa các seed và giữa các lần chạy cùng seed, nên chỉ những khác biệt lớn hơn mức này mới có ý nghĩa. Ví dụ, khác biệt giữa Post-LN và Pre-LN (0,004) là không có ý nghĩa.
 - **Không có tri thức ngôn ngữ tiền huấn luyện.** Embedding khởi tạo ngẫu nhiên và chỉ học từ khoảng 24 nghìn câu, trong đó phần lớn là CLEAN. Mô hình phải tự suy ra nghĩa xúc phạm của từ ngữ từ số ít mẫu độc hại. So với PhoBERT (mục 3.4.5), mô hình thấp hơn khoảng 0,047 macro-F1, rõ nhất ở hai lớp thiểu số.
-- **Hạn chế của từ điển mức từ.** 8,4% token trên tập test bị mã hoá thành `<unk>`, nên một phần tín hiệu có thể bị mất. Ngôn ngữ mạng xã hội còn có nhiều biến thể của cùng một từ. Trong tập train, "nài" chỉ xuất hiện 4 lần so với 1.804 lần của "này", "zay" 8 lần so với 629 lần của "vậy", "wa" 41 lần so với 1.300 lần của "quá". Từ điển mức từ coi chúng là các token hoàn toàn khác nhau, nên embedding của các biến thể hiếm được học rất kém.
+- **Hạn chế của từ điển mức từ.** Có 8,4% token trên tập test bị mã hoá thành `<unk>`, nên một phần tín hiệu có thể bị mất. Ngôn ngữ mạng xã hội còn có nhiều biến thể của cùng một từ. Trong tập train, "nài" chỉ xuất hiện 4 lần so với 1.804 lần của "này", "zay" 8 lần so với 629 lần của "vậy", "wa" 41 lần so với 1.300 lần của "quá". Từ điển mức từ coi chúng là các token hoàn toàn khác nhau, nên embedding của các biến thể hiếm được học rất kém.
 
 Tóm lại, một Transformer Encoder nhỏ, tự cài đặt và huấn luyện từ đầu có thể đạt macro-F1 khoảng 0,61 ± 0,01 trên ViHSD sau khoảng 3,5 phút huấn luyện trên laptop, tương đương khoảng 93% kết quả của PhoBERT fine-tune dù chỉ có khoảng 1/75 số tham số. Tuy nhiên, điều này chỉ đạt được khi learning rate được thiết lập đúng. Hai lớp thiểu số, đặc biệt là OFFENSIVE, vẫn là điểm yếu chính. Đây là những vấn đề mà các hướng phát triển ở mục 4.3 (tiền huấn luyện, tokenizer subword, xử lý mất cân bằng) hướng tới giải quyết.
+
+## 3.6. Xây dựng ứng dụng minh hoạ
+
+Để đưa mô hình ra khỏi notebook và quan sát cách nó hoạt động trong một tình huống gần với thực tế, nhóm xây dựng một ứng dụng web minh hoạ. Ứng dụng mô phỏng khung bình luận của mạng xã hội: người dùng nhập bình luận, mô hình gắn nhãn ngay lập tức, bình luận độc hại được làm mờ giống một hệ thống kiểm duyệt. Với mỗi bình luận, người dùng có thể xem lại toàn bộ quá trình xử lý, từ câu sau làm sạch, câu sau tách từ đến trọng số attention của từng layer và head.
+
+### 3.6.1. Kiến trúc hệ thống
+
+Ứng dụng gồm ba thành phần, được minh hoạ trong Hình 9:
+
+- **Backend FastAPI.** Khi khởi động, server nạp checkpoint, từ điển và cấu hình do notebook huấn luyện lưu ra (mục 3.4.2, Bước 7), đồng thời chạy mô hình trên toàn bộ tập test một lần và lưu kết quả vào bộ nhớ đệm. Server dùng lại đúng các hàm làm sạch và tách từ của notebook, nên câu được xử lý giống hệt lúc huấn luyện. Các endpoint chính gồm `/api/analyze` (phân tích một câu, trả về nhãn, xác suất, token và ma trận attention của mọi layer và head), `/api/samples` (lấy ngẫu nhiên câu từ tập test) và `/api/model` (cấu hình và kết quả trên tập test). FastAPI tự sinh tài liệu API tại địa chỉ `/docs`.
+- **Giao diện web.** Viết bằng React, TypeScript và Tailwind CSS, giao tiếp với backend qua HTTP và JSON. Giao diện được build thành các file tĩnh và do chính FastAPI phục vụ trên cùng một cổng, nên toàn bộ ứng dụng chạy bằng một lệnh `make start`.
+- **Dữ liệu và mô hình.** Gồm checkpoint, từ điển, file cấu hình và tập test ViHSD. Ứng dụng không huấn luyện lại mô hình mà chỉ đọc các file này.
+
+![Hình 9](images/hinh9_kien_truc_ung_dung.png)
+
+*Hình 9: Kiến trúc ứng dụng minh hoạ*
+
+Khi suy luận, ứng dụng chạy mô hình trên CPU. Do backend MPS không tất định (mục 3.4.4), kết quả trên tập test mà ứng dụng tính lại (accuracy 0,8308 và macro-F1 0,6105) lệch nhẹ so với lần chạy chính thức ở Bảng 9 (0,8286 và 0,6083).
+
+### 3.6.2. Các chức năng chính
+
+**Mô phỏng bình luận.** Đây là màn hình chính của ứng dụng (Hình 10). Người dùng nhập bình luận và bấm Enter để gửi. Có thể gửi liên tục mà không cần chờ kết quả của bình luận trước. Mỗi bình luận được gắn nhãn CLEAN, OFFENSIVE hoặc HATE kèm độ tin cậy, viền bên trái tô theo màu của nhãn. Khi bật chế độ **Ẩn bình luận độc hại**, các bình luận OFFENSIVE và HATE bị làm mờ kèm cảnh báo, người dùng bấm **Xem** để hiện nội dung. Câu chỉ chứa đường dẫn hoặc mention sẽ rỗng sau khi làm sạch và được gắn nhãn TRỐNG. Phía trên khung bình luận có thống kê số bình luận theo từng nhãn. Lịch sử bình luận được lưu trong trình duyệt nên không mất khi tải lại trang.
+
+![Hình 10](images/hinh10_mo_phong_binh_luan.png)
+
+*Hình 10: Màn hình mô phỏng bình luận, hai bình luận HATE đang bị làm mờ*
+
+Các ví dụ trong Hình 10 cho thấy mô hình phân biệt được một số trường hợp tinh tế. Câu **"Bài này viết dở quá, đọc mà buồn ngủ"** mang ý chê nhưng không chứa từ ngữ xúc phạm nên được gán CLEAN. Câu **"Mẹ nó chứ, lại hết hàng rồi"** có từ ngữ thô tục nhưng không nhắm vào ai nên được gán OFFENSIVE, đúng với định nghĩa của ViHSD (mục 2.1). Câu **"Thằng ngu này nói chuyện chán vãi"** nhắm vào một người cụ thể nên được gán HATE.
+
+**Chi tiết bình luận.** Khi bấm vào một bình luận, ứng dụng mở cửa sổ chi tiết (Hình 11) gồm bốn phần: bình luận gốc, nhãn dự đoán kèm xác suất của ba lớp, các bước tiền xử lý (câu sau làm sạch, câu sau tách từ, số token, số token `<unk>`) và trọng số self-attention. Ở phần attention, người dùng chọn layer và head (hoặc trung bình các head). Mỗi token được tô nền theo mức attention mà nó nhận được từ các token khác. Token không có trong từ điển được đánh dấu bằng viền đứt. Heatmap bên dưới thể hiện đầy đủ ma trận trọng số, mỗi hàng là phân phối softmax của một query trên toàn bộ key.
+
+![Hình 11](images/hinh11_popup_chi_tiet.png)
+
+*Hình 11: Cửa sổ chi tiết của một bình luận được gán nhãn HATE*
+
+Trong ví dụ ở Hình 11, từ ghép `chán_vãi` không có trong từ điển nên được mã hoá thành `<unk>`. Ở layer cuối, phần lớn trọng số attention tập trung vào hai token "thằng" và "ngu", là những từ mang sắc thái xúc phạm trong câu. Cần lưu ý trọng số attention chỉ cho biết mô hình tổng hợp thông tin từ đâu, chưa đủ để kết luận đó là nguyên nhân của quyết định phân loại.
+
+**Ví dụ từ tập test.** Màn hình này lấy ngẫu nhiên một số câu từ tập test, có tuỳ chọn chỉ lấy câu độc hại, rồi hiển thị nhãn thật, nhãn dự đoán và độ tin cậy của từng câu (Hình 12). Bấm vào một dòng sẽ hiện phân tích chi tiết của câu đó, giống cửa sổ ở Hình 11. Trong ví dụ ở Hình 12, mô hình dự đoán đúng 5 trên 6 câu. Câu sai duy nhất có nhãn thật OFFENSIVE nhưng bị dự đoán thành HATE với độ tin cậy chỉ 48,3%, minh hoạ đúng điểm yếu đã phân tích ở mục 3.5.
+
+![Hình 12](images/hinh12_vi_du_tap_test.png)
+
+*Hình 12: Màn hình ví dụ từ tập test*
+
+**Thông tin mô hình.** Màn hình cuối tóm tắt kiến trúc mô hình, pipeline xử lý và kết quả trên tập test gồm precision, recall, F1 của từng lớp cùng confusion matrix (Hình 13). Các số liệu này được tính trực tiếp từ checkpoint mà ứng dụng đang dùng.
+
+![Hình 13](images/hinh13_thong_tin_mo_hinh.png)
+
+*Hình 13: Màn hình thông tin mô hình*

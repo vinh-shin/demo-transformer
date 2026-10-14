@@ -2,7 +2,7 @@
 
 ## 2.1. Tổng quan về bài toán phát hiện bình luận độc hại
 
-Phát hiện bình luận độc hại (toxic comment detection) là bài toán xác định một đoạn văn bản do người dùng tạo ra trên mạng xã hội có chứa nội dung xúc phạm, lăng mạ hay kích động thù ghét hay không [5]. Về mặt hình thức, đây là bài toán phân loại văn bản có giám sát: cho một câu đầu vào $x = (w_1, w_2, \dots, w_T)$ gồm $T$ từ, mô hình cần học ánh xạ $f: x \mapsto y$ với $y$ thuộc tập nhãn hữu hạn.
+Phát hiện bình luận độc hại (toxic comment detection) là bài toán xác định một đoạn văn bản do người dùng tạo ra trên mạng xã hội có chứa nội dung xúc phạm, lăng mạ hoặc kích động thù ghét hay không [5]. Về mặt hình thức, đây là bài toán phân loại văn bản có giám sát: cho một câu đầu vào $x = (w_1, w_2, \dots, w_T)$ gồm $T$ từ, mô hình cần học ánh xạ $f: x \mapsto y$ với $y$ thuộc tập nhãn hữu hạn.
 
 Trong đề tài này, nhóm sử dụng dataset ViHSD (Vietnamese Hate Speech Detection) [4] với ba nhãn:
 
@@ -16,7 +16,7 @@ Ranh giới giữa OFFENSIVE và HATE vốn không rõ ràng, ngay cả với ng
 
 ### 2.2.1. Phương pháp dựa trên luật và từ điển
 
-Phương pháp này duy trì một danh sách từ khoá xúc phạm (blacklist) và gán nhãn độc hại cho bình luận chứa các từ đó. Ưu điểm là đơn giản, nhanh, dễ giải thích; nhược điểm là không hiểu ngữ cảnh (cùng một từ có thể mang nghĩa xúc phạm hoặc không tuỳ câu), dễ bị né tránh bằng cách viết lệch từ, và danh sách từ khoá cần cập nhật thủ công liên tục [5].
+Phương pháp này duy trì một danh sách từ khoá xúc phạm (blacklist) và gán nhãn độc hại cho bình luận chứa các từ đó. Ưu điểm là đơn giản, nhanh, dễ giải thích. Nhược điểm là không hiểu ngữ cảnh (cùng một từ có thể mang nghĩa xúc phạm hoặc không tuỳ câu), dễ bị né tránh bằng cách viết lệch từ và danh sách từ khoá cần cập nhật thủ công liên tục [5].
 
 ### 2.2.2. Phương pháp học máy truyền thống
 
@@ -24,7 +24,7 @@ Văn bản được biểu diễn thành vector đặc trưng thủ công như B
 
 ### 2.2.3. Phương pháp học sâu tuần tự (RNN, LSTM và CNN)
 
-Các mô hình học sâu học biểu diễn dày (dense embedding) cho từ và tự trích xuất đặc trưng. Mạng hồi quy RNN và biến thể LSTM [7] xử lý câu tuần tự từ trái sang phải, lưu thông tin qua trạng thái ẩn; mạng tích chập TextCNN [8] dùng các bộ lọc trượt để bắt n-gram cục bộ. Hạn chế chung là RNN không song song hoá được theo chiều thời gian và khó học phụ thuộc xa do gradient tiêu biến, còn CNN chỉ nhìn được ngữ cảnh trong phạm vi cửa sổ bộ lọc.
+Các mô hình học sâu học biểu diễn dày (dense embedding) cho từ và tự trích xuất đặc trưng. Mạng hồi quy RNN và biến thể LSTM [7] xử lý câu tuần tự từ trái sang phải, lưu thông tin qua trạng thái ẩn. Mạng tích chập TextCNN [8] dùng các bộ lọc trượt để bắt n-gram cục bộ. Hạn chế chung là RNN không song song hoá được theo chiều thời gian và khó học phụ thuộc xa do gradient tiêu biến, còn CNN chỉ nhìn được ngữ cảnh trong phạm vi cửa sổ bộ lọc.
 
 ### 2.2.4. So sánh mô hình tuần tự và Transformer
 
@@ -37,7 +37,7 @@ Transformer [1] loại bỏ hoàn toàn cơ chế hồi quy, thay bằng cơ ch�
 | Khả năng học phụ thuộc xa | Hạn chế do gradient tiêu biến | Tốt, attention nối trực tiếp mọi cặp từ |
 | Thông tin vị trí | Ngầm định qua thứ tự xử lý | Phải bổ sung tường minh (positional encoding) |
 | Chi phí tính toán theo độ dài câu | $O(T \cdot d^2)$ | $O(T^2 \cdot d)$ |
-| Yêu cầu dữ liệu | Vừa phải | Lớn; thường cần pretraining để phát huy |
+| Yêu cầu dữ liệu | Vừa phải | Lớn, thường cần pretraining để phát huy |
 
 *Bảng 1: So sánh mô hình tuần tự (RNN, LSTM) và Transformer*
 
@@ -45,7 +45,7 @@ Trong phạm vi đề tài này, nhóm lựa chọn tiếp cận theo hướng T
 
 ## 2.3. Kiến trúc Transformer Encoder
 
-Transformer Encoder gồm một lớp embedding, positional encoding, và $N$ lớp encoder giống nhau xếp chồng. Mỗi lớp encoder có hai khối con: Multi-Head Self-Attention và Position-wise Feed-Forward Network, mỗi khối được bọc bởi residual connection và layer normalization (Hình 1).
+Transformer Encoder gồm một lớp embedding, positional encoding và $N$ lớp encoder giống nhau xếp chồng. Mỗi lớp encoder có hai khối con: Multi-Head Self-Attention và Position-wise Feed-Forward Network, mỗi khối được bọc bởi residual connection và layer normalization (Hình 1).
 
 ```mermaid
 flowchart TB
@@ -104,7 +104,7 @@ flowchart LR
 
 *Hình 2: Cơ chế Multi-Head Self-Attention*
 
-Để minh hoạ trực quan, nhóm cài đặt self-attention từng bước bằng NumPy trên câu ví dụ "Tôi yêu học máy" (notebook `demo.ipynb`, trọng số khởi tạo ngẫu nhiên, chưa huấn luyện). Mỗi hàng của ma trận trọng số là một phân phối xác suất cho biết token truy vấn "chú ý" bao nhiêu đến từng token còn lại, tổng mỗi hàng bằng 1 (Hình 3).
+Để minh hoạ trực quan, nhóm cài đặt self-attention từng bước bằng NumPy trên câu ví dụ "Tôi yêu học máy" (trọng số khởi tạo ngẫu nhiên, chưa huấn luyện). Mỗi hàng của ma trận trọng số là một phân phối xác suất cho biết token truy vấn "chú ý" bao nhiêu đến từng token còn lại, tổng mỗi hàng bằng 1 (Hình 3).
 
 ![Hình 3](images/hinh3_attention_heatmap_demo.png)
 
@@ -116,7 +116,7 @@ Sau attention, mỗi vị trí được đưa độc lập qua một mạng nơ-
 
 $$\text{FFN}(x) = W_2 \, \phi(W_1 x + b_1) + b_2$$
 
-với $W_1 \in \mathbb{R}^{d_{model} \times d_{ff}}$, $W_2 \in \mathbb{R}^{d_{ff} \times d_{model}}$, thường chọn $d_{ff} = 4 \cdot d_{model}$. Bài báo gốc dùng hàm kích hoạt ReLU; đề tài dùng GELU [9] theo cách của BERT [2]. Nếu attention đóng vai trò "trộn" thông tin giữa các vị trí, FFN đóng vai trò biến đổi phi tuyến biểu diễn tại từng vị trí.
+với $W_1 \in \mathbb{R}^{d_{model} \times d_{ff}}$, $W_2 \in \mathbb{R}^{d_{ff} \times d_{model}}$, thường chọn $d_{ff} = 4 \cdot d_{model}$. Bài báo gốc dùng hàm kích hoạt ReLU, còn đề tài dùng GELU [9] theo cách của BERT [2]. Nếu attention đóng vai trò "trộn" thông tin giữa các vị trí, FFN đóng vai trò biến đổi phi tuyến biểu diễn tại từng vị trí.
 
 ### 2.3.5. Residual Connection và Layer Normalization
 
@@ -125,7 +125,7 @@ Mỗi khối con được bọc bởi residual connection [10] và layer normali
 $$x' = \text{LayerNorm}(x + \text{Dropout}(\text{MultiHead}(x)))$$
 $$y = \text{LayerNorm}(x' + \text{Dropout}(\text{FFN}(x')))$$
 
-Residual connection giúp gradient truyền trực tiếp qua nhiều lớp, còn LayerNorm chuẩn hoá mỗi vector theo trung bình và độ lệch chuẩn trên chiều đặc trưng, giúp quá trình huấn luyện ổn định. Một biến thể phổ biến là Pre-LN, đặt LayerNorm trước mỗi khối con; Xiong và cộng sự [12] chỉ ra Pre-LN có gradient ổn định hơn ở giai đoạn đầu huấn luyện và ít phụ thuộc vào warm-up, trong khi Post-LN thường cần warm-up learning rate cẩn thận.
+Residual connection giúp gradient truyền trực tiếp qua nhiều lớp, còn LayerNorm chuẩn hoá mỗi vector theo trung bình và độ lệch chuẩn trên chiều đặc trưng, giúp quá trình huấn luyện ổn định. Một biến thể phổ biến là Pre-LN, đặt LayerNorm trước mỗi khối con. Xiong và cộng sự [12] chỉ ra Pre-LN có gradient ổn định hơn ở giai đoạn đầu huấn luyện và ít phụ thuộc vào warm-up, trong khi Post-LN thường cần warm-up learning rate cẩn thận.
 
 ## 2.4. Huấn luyện và đánh giá mô hình phân loại
 
@@ -147,7 +147,7 @@ Giai đoạn warm-up tránh cập nhật quá lớn khi trọng số còn ngẫu
 
 ### 2.4.3. Các độ đo đánh giá
 
-Với mỗi lớp $c$, gọi $TP_c$, $FP_c$, $FN_c$ lần lượt là số mẫu dự đoán đúng là $c$, dự đoán nhầm thành $c$, và bỏ sót lớp $c$:
+Với mỗi lớp $c$, gọi $TP_c$, $FP_c$, $FN_c$ lần lượt là số mẫu dự đoán đúng là $c$, dự đoán nhầm thành $c$ và bỏ sót lớp $c$:
 
 $$\text{Precision}_c = \frac{TP_c}{TP_c + FP_c}, \quad \text{Recall}_c = \frac{TP_c}{TP_c + FN_c}, \quad F1_c = \frac{2 \cdot \text{Precision}_c \cdot \text{Recall}_c}{\text{Precision}_c + \text{Recall}_c}$$
 
