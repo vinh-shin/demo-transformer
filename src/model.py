@@ -1,6 +1,7 @@
 """Transformer Encoder từ scratch — cùng kiến trúc với notebook
-`src/vihsd_transformer_from_scratch.ipynb`, bổ sung trả về attention weights
-của mọi layer để frontend vẽ heatmap."""
+`notebook/vihsd_transformer_from_scratch.ipynb`, bổ sung trả về
+attention weights của mọi layer để ứng dụng vẽ heatmap. Đổi kiến trúc ở notebook thì
+phải sửa cả file này, nếu không checkpoint sẽ không nạp được."""
 
 import json
 import math
