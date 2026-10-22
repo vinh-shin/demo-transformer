@@ -9,13 +9,12 @@ trên dataset **ViHSD** (Vietnamese Hate Speech Detection).
 demo-transformer/
 ├── requirements.txt
 ├── Makefile
-├── apps/
-│   ├── api/    # Backend FastAPI: main.py (endpoint), inference.py (suy luận), model.py (kiến trúc)
-│   └── web/    # Frontend React + TypeScript + Tailwind (Vite)
-├── src/
+├── main.py      # Điểm chạy ứng dụng desktop
+├── src/         # Ứng dụng Tkinter: giao diện, suy luận (inference.py), kiến trúc model (model.py), assets/
+│   └── core/    # Hàm dùng chung cho ứng dụng và notebook: tải dữ liệu, tiền xử lý, đánh giá
+├── notebook/
 │   ├── vihsd_phobert_toxic_detection.ipynb      # Fine-tune PhoBERT (pretrained) trên ViHSD
-│   ├── vihsd_transformer_from_scratch.ipynb     # Transformer Encoder tự viết bằng PyTorch (không pretrained)
-│   └── core/                                    # Hàm dùng chung: tải dữ liệu, tiền xử lý, đánh giá
+│   └── vihsd_transformer_from_scratch.ipynb     # Transformer Encoder tự viết bằng PyTorch (không pretrained)
 ├── data/    # dữ liệu ViHSD tải về (tự sinh khi chạy notebook, không commit)
 └── models/  # checkpoint model đã train (tự sinh khi chạy notebook, không commit)
 ```
@@ -51,27 +50,31 @@ pip install -r requirements.txt
 python -m ipykernel install --user --name demo-transformer --display-name "Python (demo-transformer)"
 ```
 
-Sau đó mở notebook trong `src/` và chọn kernel **"Python (demo-transformer)"**.
+Sau đó mở notebook trong `notebook/` và chọn kernel **"Python (demo-transformer)"**.
 
 ## Chạy notebook
 
-1. `src/vihsd_phobert_toxic_detection.ipynb` — chạy tuần tự từ trên xuống. Tự tải dataset ở phần 2.
+1. `notebook/vihsd_phobert_toxic_detection.ipynb` — chạy tuần tự từ trên xuống. Tự tải dataset ở phần 2.
    Có Apple Silicon (MPS) sẽ tự tăng tốc; nếu chỉ có CPU, quá trình fine-tune sẽ chậm hơn.
-2. `src/vihsd_transformer_from_scratch.ipynb` — chạy tuần tự từ trên xuống, dùng lại dataset đã tải ở bước 1
+2. `notebook/vihsd_transformer_from_scratch.ipynb` — chạy tuần tự từ trên xuống, dùng lại dataset đã tải ở bước 1
    (hoặc tự tải nếu chưa có). Có cờ để chỉnh số epoch/kiến trúc ở phần cấu hình model.
 
-## Chạy ứng dụng demo (FastAPI + React)
+## Chạy ứng dụng (Tkinter)
 
-App gồm backend FastAPI (`apps/api`) và giao diện React (`apps/web`). App không tự huấn luyện model. Nó
-đọc checkpoint và tập test do notebook from-scratch sinh ra, nên lần đầu cần làm đủ các bước dưới đây theo
-đúng thứ tự. Mọi lệnh đều chạy từ thư mục gốc project.
+Ứng dụng là chương trình desktop viết bằng Tkinter, có chức năng **mô phỏng khung bình luận**. App nạp checkpoint
+trực tiếp bằng PyTorch (`src/inference.py`, `src/model.py`), không qua API và không cần Node.js. Tiền xử lý
+dùng chung `src/core/preprocessing.py` với notebook. App không tự huấn luyện model mà đọc checkpoint do notebook
+from-scratch sinh ra, nên lần đầu cần làm đủ các bước dưới đây theo đúng thứ tự. Mọi lệnh đều chạy từ thư mục
+gốc project.
 
-Yêu cầu: Python ≥ 3.10 và Node.js ≥ 20 (kèm npm).
+Yêu cầu: Python ≥ 3.10 có kèm Tkinter. Tkinter có sẵn trong Python cài từ python.org (Windows, macOS). Nếu báo
+thiếu `tkinter`, cài thêm `brew install python-tk` (Python của Homebrew) hoặc `sudo apt install python3-tk`
+(Ubuntu).
 
 **Bước 1. Cài môi trường** (chỉ làm một lần)
 
 ```bash
-make install   # tạo .venv, cài requirements.txt và thư viện của apps/web
+make install   # tạo .venv và cài requirements.txt
 ```
 
 Windows không có sẵn `make`, chạy trực tiếp (PowerShell hoặc cmd):
@@ -79,7 +82,6 @@ Windows không có sẵn `make`, chạy trực tiếp (PowerShell hoặc cmd):
 ```powershell
 python -m venv .venv
 .venv\Scripts\python -m pip install -r requirements.txt
-npm --prefix apps/web ci
 ```
 
 **Bước 2. Đăng ký kernel cho notebook** (chỉ làm một lần)
@@ -91,67 +93,44 @@ npm --prefix apps/web ci
 
 **Bước 3. Chạy notebook để tải dataset và huấn luyện model**
 
-Mở `src/vihsd_transformer_from_scratch.ipynb` trong VS Code hoặc Jupyter, chọn kernel
+Mở `notebook/vihsd_transformer_from_scratch.ipynb` trong VS Code hoặc Jupyter, chọn kernel
 **"Python (demo-transformer)"** rồi chạy toàn bộ notebook (Run All). Quá trình mất khoảng 4 phút trên
 Apple M1 Pro (MPS) và lâu hơn nếu chỉ có CPU.
 
-Notebook dùng đường dẫn tương đối `../data` và `../models`, nên phải chạy với thư mục làm việc là `src/`
+Notebook dùng đường dẫn tương đối `../data` và `../models`, nên phải chạy với thư mục làm việc là `notebook/`
 (mặc định khi mở notebook trong VS Code hoặc Jupyter). Sau khi chạy xong phải có đủ các file sau:
 
 ```
-data/vihsd/vihsd/test.csv
-models/transformer-scratch-vihsd/model_state_dict.pt
-models/transformer-scratch-vihsd/vocab.json
-models/transformer-scratch-vihsd/config.json
+models/model_state_dict.pt
+models/vocab.json
+models/config.json
 ```
 
 **Bước 4. Chạy app**
 
 ```bash
-make start                # build giao diện rồi chạy app, mặc định cổng 8000
-make start PORT=8600      # đổi cổng
+make run                           # hoặc: .venv/bin/python main.py
 ```
 
-Windows:
+Windows: `.venv\Scripts\python main.py`
 
-```powershell
-npm --prefix apps/web run build
-.venv\Scripts\python -m uvicorn main:app --app-dir apps/api --port 8000
-```
+Lần đầu mở, app mất vài giây để nạp model; bình luận gửi trong lúc này sẽ tự có kết quả khi model sẵn sàng.
+Nếu thiếu checkpoint, app báo lỗi và chỉ ra file còn thiếu. Khi đó quay lại Bước 3.
 
-Lần đầu khởi động, server mất vài giây để nạp model và đánh giá trên tập test. Nếu thiếu checkpoint hoặc
-tập test, giao diện sẽ báo lỗi và chỉ ra file còn thiếu. Khi đó quay lại Bước 3. Những lần chạy sau chỉ cần
-Bước 4, trừ khi muốn huấn luyện lại model.
+Giao diện gồm:
 
-App mở tại http://localhost:8000, gồm 3 tab:
+- **Sidebar**: logo trường (`src/assets/hcmute_logo.png`), tên trường và khoa, môn học, đề tài, thành viên
+  nhóm và GVHD.
+- **Khung bình luận**: nhập bình luận (Enter để gửi, Shift + Enter để xuống dòng) hoặc bấm câu thử nhanh, mỗi
+  bình luận được gắn nhãn kèm độ tin cậy. Có thể ẩn bình luận độc hại. Lịch sử được lưu ở
+  `~/.vihsd-demo-chat.json`.
+- **Cửa sổ chi tiết** (bấm vào một bình luận): xác suất 3 lớp, kết quả tiền xử lý và heatmap self-attention
+  (chọn layer, head).
 
-| Tab | Chức năng |
-|---|---|
-| Mô phỏng bình luận | Khung bình luận dạng chat: nhập liên tục, mỗi bình luận được gắn nhãn ngay. Có thể làm mờ bình luận độc hại. Bấm vào bình luận để mở pop-up chi tiết (tiền xử lý, xác suất, attention). Lịch sử lưu trong trình duyệt |
-| Ví dụ từ tập test | Lấy mẫu ngẫu nhiên từ `test.csv`, so sánh dự đoán với nhãn thật, phân tích chi tiết từng câu |
-| Mô hình | Kiến trúc, pipeline xử lý, kết quả từng lớp và confusion matrix trên tập test |
+App luôn dùng giao diện sáng, kể cả khi hệ điều hành bật Dark Mode.
 
-### API
-
-Tài liệu API (Swagger) tự sinh tại http://localhost:8000/docs.
-
-| Endpoint | Chức năng |
-|---|---|
-| `GET /api/health` | Trạng thái nạp model và lỗi thiếu file (nếu có) |
-| `GET /api/model` | Cấu hình, số tham số, kết quả trên tập test |
-| `POST /api/analyze` | Phân tích một câu, kèm token và attention |
-| `POST /api/predict` | Phân loại nhiều câu, tối đa 10.000 câu mỗi lần |
-| `GET /api/samples?n=10&only_toxic=false` | Lấy câu ngẫu nhiên từ tập test, kèm dự đoán |
-| `POST /api/csv/inspect` | Đọc danh sách cột của file CSV upload |
-| `POST /api/csv/predict` | Phân loại file CSV, tính chỉ số nếu có cột nhãn |
-
-### Phát triển giao diện
-
-```bash
-make dev       # API ở cổng 8000 và Vite ở http://localhost:5173, tự tải lại khi sửa code
-```
-
-Vite chuyển tiếp các request `/api` sang cổng 8000. Có thể chạy riêng từng phần bằng `make api` và `make web`.
+`src/model.py` là bản sao kiến trúc trong notebook. Nếu thay đổi kiến trúc trong notebook thì phải sửa cả file
+này, nếu không checkpoint mới sẽ không nạp được.
 
 ## Ghi chú
 
